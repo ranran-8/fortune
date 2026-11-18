@@ -124,6 +124,30 @@
     margin-top: 10px;
   }
 
+  /* 方向指南 */
+  .dir-grid { display: flex; gap: 8px; margin: 10px 0 4px; }
+  .dir-item {
+    flex: 1; text-align: center; padding: 10px 4px; border-radius: 10px;
+    background: rgba(245,215,142,.08); border: 1px solid rgba(245,215,142,.25);
+  }
+  .dir-item .dv { font-size: 18px; font-weight: 700; color: #f5d78e; }
+  .dir-item .dl { font-size: 11px; color: #8a93b2; margin-top: 3px; }
+  .step-list { counter-reset: step; margin-top: 4px; }
+  .step-item { display: flex; gap: 10px; margin: 9px 0; align-items: flex-start; }
+  .step-item .sn {
+    counter-increment: step; flex-shrink: 0; width: 24px; height: 24px;
+    line-height: 24px; text-align: center; border-radius: 50%;
+    background: rgba(245,215,142,.18); color: #f5d78e; font-weight: 700; font-size: 13px;
+  }
+  .step-item .sn::before { content: counter(step); }
+  .step-item .sc { font-size: 13px; line-height: 1.75; color: #d5d9e6; }
+  .step-item .sc b { color: #f5d78e; }
+  .calm-quote {
+    margin-top: 10px; padding: 12px 14px; border-radius: 12px;
+    background: rgba(0,0,0,.25); border-left: 3px solid #f5d78e;
+    font-size: 13px; line-height: 1.9; color: #e8d9b0; font-style: italic;
+  }
+
   /* 解梦 */
   .dream-item {
     background: rgba(0,0,0,.25); border-radius: 12px; padding: 14px;
@@ -247,6 +271,14 @@
       <div id="ssBars"></div>
       <div id="manualBody"></div>
       <p class="tip" style="margin-top:12px;">· 十神统计采用子平传统「地支藏干加权」模型（本气1.0 / 中气0.6 / 余气0.3），供传统文化学习参考。</p>
+    </div>
+
+    <!-- 方向指南 -->
+    <div class="card">
+      <h2>方向指南 · 迷茫时看这里</h2>
+      <div id="compassBody"></div>
+      <div id="actionBody"></div>
+      <p class="tip" style="margin-top:12px;">· 方位以「出生地或常住地」为中心参照；命理指方向，行动定结果——仅供参考，人生的选择权始终在你手里。</p>
     </div>
 
     <!-- 今日干支 + 评分 -->
@@ -721,6 +753,106 @@ function renderManual(a){
     </div>`;
 }
 
+/* ================= 方向指南 · 迷茫急救 ================= */
+/* 喜用神五行知识库：方位以出生地/常住地为中心，行业取传统五行属性行业 */
+const XIYONG_GUIDE = {
+  "木": { dir:"东", color:"青绿", noble:"虎、兔",
+    fields:["教育培训","文化出版","设计创意","中医药养生","园林花木","家具服饰"],
+    tune:"多亲近草木与公园，晨起先做当日计划再出发；办公或居住处摆一盆绿植，穿青绿色系提振状态。",
+    soil:"木主生长与教化——你适合「让人和事成长」的土壤：教育、文化、创意、健康这些领域，越做越旺。" },
+  "火": { dir:"南", color:"红紫", noble:"蛇、马",
+    fields:["互联网电子","能源电力","传媒影视","餐饮美业","广告营销","灯光舞台"],
+    tune:"多晒太阳、多表达输出——把想法说出来本身就是你的充电方式；红色紫色系点缀衣着与环境。",
+    soil:"火主光明与传播——你适合「被看见」的土壤：传媒、电子、美业、营销这些发光发热的领域，是你的主场。" },
+  "土": { dir:"本地", color:"黄棕", noble:"牛、龙、羊、狗",
+    fields:["房产建筑","农业种植","陶瓷矿业","人力资源","管理咨询","仓储中转"],
+    tune:"整理居住与工作环境（土喜整洁厚重），饮食规律、睡眠充足；黄棕色系、陶土木质器物安神。",
+    soil:"土主承载与积累——你适合「扎实沉淀」的土壤：地产建筑、农业、人力、管理这些越老越吃香的领域。" },
+  "金": { dir:"西", color:"白金", noble:"猴、鸡",
+    fields:["金融财务","机械制造","司法执法","五金汽配","贵金属","医疗器械"],
+    tune:"训练果断拍板的习惯——小事30秒内决定；作息规律如金属有序，白色金色系衣着提气。",
+    soil:"金主刚毅与决断——你适合「规则与价值交换」的土壤：金融、制造、司法、器械这些讲秩序讲专业的领域。" },
+  "水": { dir:"北", color:"蓝黑", noble:"鼠、猪",
+    fields:["贸易物流","旅游出行","水产航运","咨询策划","传媒流动","跨境电商"],
+    tune:"保持流动与学习——每周接触一个新领域；早睡多水，蓝色黑色系助你静心聚气。",
+    soil:"水主智慧与流通——你适合「流动变化」的土壤：贸易、出行、策划、咨询这些靠信息和灵活取胜的领域。" }
+};
+
+/* 各格局的「迷茫破局三步」专属行动清单 + 定心话 */
+const WEEK_ACTIONS = {
+  "财星": {
+    steps:["列出手头最熟悉的一项资源或技能，本周主动介绍给 3 个可能需要它的人",
+      "记一周收支流水，看清钱的真实流向——迷茫时，账本比感觉可靠",
+      "定一个三个月的小目标并拆到每月：不求大，求算数清晰"],
+    quote:"「君子爱财，取之有道。方向对了，慢一点也是前进。」" },
+  "官杀": {
+    steps:["把手头最拖延的一件事拆成 3 步，本周只完成第 1 步——先赢一次",
+      "制定并严格执行一周作息表：秩序感是你最好的稳压器",
+      "主动向上级或客户汇报一次进展——被看见的担当会变成机会"],
+    quote:"「真正的掌控，是先掌控自己的节奏。你不必一个人扛起全世界。」" },
+  "食伤": {
+    steps:["把脑中盘旋的一个想法做成可见的作品（文章/短视频/图），本周发布出去",
+      "完整地向朋友讲一次你的想法，认真收集三条反馈",
+      "每天 20 分钟，练一项表达或创作技能——才华靠作品说话"],
+    quote:"「世界从不缺想法，缺的是把想法做完的人。你的锋芒，值得被看见。」" },
+  "印星": {
+    steps:["本周读完一本书的一章，并写下 200 字输出——输出让知识长在你身上",
+      "向一位你敬佩的前辈请教一个具体问题，贵人是问出来的",
+      "把你最懂的一个知识点讲给别人听一次，教是最好的学"],
+    quote:"「你不是走得慢，只是走得更深。厚积者，其发必远。」" },
+  "比劫": {
+    steps:["约一位同频的朋友聊聊彼此的近况与计划——人脉是你的情报网",
+      "启动一件拖延已久的「想做」小事，本周迈出第一步",
+      "给自己立一个月度之约：完成了，郑重地奖励自己一次"],
+    quote:"「路是人走出来的。先出发，同路人自然会出现。」" }
+};
+
+function renderCompass(a){
+  const ss = shiShenStats(a);
+  const gSorted = Object.keys(ss.groups).sort((x, y) => ss.groups[y] - ss.groups[x]);
+  const dom = gSorted[0];
+  const gm = GROUP_MANUAL[dom];
+  const act = WEEK_ACTIONS[dom];
+
+  const xiMain = XIYONG_GUIDE[a.xiWxSet[0]];
+  const xiSub  = a.xiWxSet[1] ? XIYONG_GUIDE[a.xiWxSet[1]] : null;
+  const jiNames = a.jiWxSet.join("、");
+
+  document.getElementById("compassBody").innerHTML = `
+    <div class="manual-block">
+      <div class="mt">你的幸运方向 · 喜用神「${a.xiWxSet.join("、")}」</div>
+      <div class="mc">喜用神是命局最需要的五行养分——顺着他走，事半而功倍。方位以<b>出生地或常住地</b>为圆心参照。</div>
+      <div class="dir-grid">
+        <div class="dir-item"><div class="dv">${xiMain.dir}${xiSub && xiSub.dir !== xiMain.dir ? " / " + xiSub.dir : ""}</div><div class="dl">有利方位</div></div>
+        <div class="dir-item"><div class="dv">${xiMain.noble}</div><div class="dl">贵人属相</div></div>
+        <div class="dir-item"><div class="dv">${xiMain.color}</div><div class="dl">幸运色系</div></div>
+      </div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">适合你的土壤（行业领域）</div>
+      <div class="mc">${xiMain.soil}</div>
+      <div style="margin-top:8px">${xiMain.fields.map(f => `<span class="manual-tag">${f}</span>`).join("")}</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">日常调频法</div>
+      <div class="mc">${xiMain.tune}</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">不必强求的方向</div>
+      <div class="mc">传统命理中「${jiNames}」非你所喜——<b>并非不能接触</b>，而是不必把主要精力硬投在这些方向上较劲。把力气省下来，浇灌上面属于你的土壤。</div>
+    </div>`;
+
+  document.getElementById("actionBody").innerHTML = `
+    <div class="manual-block" style="border-color:rgba(245,215,142,.35)">
+      <div class="mt">迷茫破局 · 三步走（${gm.title}专属）</div>
+      <div class="mc">迷茫的本质，往往不是没路，而是<b>看不清自己的优势</b>。按这三步走，一周就有松动：</div>
+      <div class="step-list">
+        ${act.steps.map(s => `<div class="step-item"><span class="sn"></span><div class="sc">${s}</div></div>`).join("")}
+      </div>
+    </div>
+    <div class="calm-quote">${act.quote}<br><span style="font-style:normal;color:#8a93b2;font-size:12px">—— 命理指方向，行动定结果。</span></div>`;
+}
+
 function dailyFortune(a, now){
   const tDIdx = dayGZIndex(now);
   const tGanIdx = tDIdx % 10, tZhiIdx = tDIdx % 12;
@@ -961,6 +1093,9 @@ function calc(){
 
   // —— 人生说明书（十神格局） ——
   renderManual(a);
+
+  // —— 方向指南（迷茫急救） ——
+  renderCompass(a);
 
   // —— 今日总运 ——
   document.getElementById("todayGZ").textContent =
