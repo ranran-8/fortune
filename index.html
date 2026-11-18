@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>每日五行运势 · 传统文化民俗日历</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #1f2b4d 100%);
+    color: #e8e6e3;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+  header { text-align: center; padding: 28px 0 8px; }
+  header h1 {
+    font-size: 26px; letter-spacing: 6px; color: #f5d78e;
+    text-shadow: 0 0 18px rgba(245,215,142,.35); font-weight: 600;
+  }
+  header .sub { font-size: 12px; color: #8a93b2; margin-top: 8px; letter-spacing: 2px; }
+
+  .card {
+    background: rgba(255,255,255,.055);
+    border: 1px solid rgba(245,215,142,.14);
+    border-radius: 16px; padding: 18px; margin-top: 14px;
+    backdrop-filter: blur(6px);
+  }
+  .card h2 {
+    font-size: 15px; color: #f5d78e; letter-spacing: 3px;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .card h2::before { content: "◆"; font-size: 10px; }
+
+  /* 输入表单 */
+  label { display: block; font-size: 13px; color: #a9b3cc; margin: 12px 0 6px; }
+  input, select, textarea {
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(0,0,0,.28); color: #e8e6e3; font-size: 15px; outline: none;
+    font-family: inherit; resize: vertical;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #f5d78e; }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > div { flex: 1; }
+  button.primary {
+    width: 100%; margin-top: 20px; padding: 14px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #f5d78e, #d9a441);
+    color: #2b2313; font-size: 16px; font-weight: 700; letter-spacing: 4px;
+    cursor: pointer; box-shadow: 0 4px 18px rgba(217,164,65,.35);
+  }
+  button.primary:active { transform: scale(.98); }
+  .tip { font-size: 11px; color: #6f7894; margin-top: 14px; line-height: 1.7; }
+
+  /* 四柱 */
+  .pillars { display: flex; justify-content: space-between; text-align: center; }
+  .pillar .plabel { font-size: 11px; color: #8a93b2; margin-bottom: 6px; letter-spacing: 2px; }
+  .pillar .box {
+    width: 56px; height: 66px; border-radius: 12px;
+    background: rgba(0,0,0,.3); border: 1px solid rgba(245,215,142,.25);
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+    font-size: 20px; font-weight: 600;
+  }
+  .pillar .box .wx { font-size: 10px; font-weight: 400; color: #b8a1d9; letter-spacing: 1px; }
+  .daymaster-tag {
+    margin-top: 12px; font-size: 13px; color: #f5d78e; text-align: center; letter-spacing: 1px;
+  }
+  .wuxing-bar { display: flex; gap: 6px; margin-top: 14px; }
+  .wx-seg { flex: 1; text-align: center; padding: 8px 0; border-radius: 8px; font-size: 12px; }
+  .wx-0 { background: rgba(106,168,79,.55); }   /* 木 */
+  .wx-1 { background: rgba(214,69,65,.55); }    /* 火 */
+  .wx-2 { background: rgba(217,164,65,.55); }   /* 土 */
+  .wx-3 { background: rgba(200,200,200,.4); }   /* 金 */
+  .wx-4 { background: rgba(52,120,190,.55); }   /* 水 */
+
+  /* 评分 */
+  .score-wrap { display: flex; align-items: center; gap: 16px; }
+  .score-num { font-size: 52px; font-weight: 700; color: #f5d78e; min-width: 110px; }
+  .score-num small { font-size: 14px; color: #8a93b2; }
+  .score-bar { flex: 1; height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #d9a441, #f5d78e); transition: width .8s ease; }
+  .score-desc { font-size: 13px; color: #a9b3cc; margin-top: 10px; line-height: 1.8; }
+
+  /* 网格 */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mini-card {
+    background: rgba(0,0,0,.25); border-radius: 12px; padding: 14px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .mini-card .t { font-size: 12px; color: #8a93b2; margin-bottom: 8px; letter-spacing: 2px; }
+  .mini-card .v { font-size: 14px; line-height: 1.8; }
+  .color-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 5px; vertical-align: -2px; border: 1px solid rgba(255,255,255,.3); }
+  .num-badge { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; background: rgba(245,215,142,.18); color: #f5d78e; font-weight: 700; margin: 0 4px 4px 0; font-size: 13px; }
+
+  .yi-ji { display: flex; flex-direction: column; gap: 10px; }
+  .yi-ji .item { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.7; }
+  .tag { flex-shrink: 0; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 6px; font-weight: 700; font-size: 13px; }
+  .tag.yi { background: rgba(106,168,79,.4); color: #a9d98b; }
+  .tag.ji { background: rgba(214,69,65,.35); color: #e89a9a; }
+
+  /* 解梦 */
+  .dream-item {
+    background: rgba(0,0,0,.25); border-radius: 12px; padding: 14px;
+    border: 1px solid rgba(255,255,255,.08); margin-top: 10px;
+  }
+  .dream-item .head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .dream-item .sym { font-size: 16px; font-weight: 700; color: #f5d78e; letter-spacing: 2px; }
+  .dream-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 700; letter-spacing: 2px; }
+  .badge-ji { background: rgba(106,168,79,.4); color: #a9d98b; }
+  .badge-xiong { background: rgba(214,69,65,.35); color: #e89a9a; }
+  .badge-zhong { background: rgba(217,164,65,.35); color: #f5d78e; }
+  .dream-item .txt { font-size: 13.5px; line-height: 1.9; color: #d5d9e6; }
+  .dream-fallback { font-size: 13px; color: #a9b3cc; line-height: 1.9; margin-top: 10px; }
+
+  /* 抽签 */
+  .qian-tube {
+    width: 74px; height: 92px; margin: 6px auto 10px; border-radius: 12px 12px 40px 40px;
+    background: linear-gradient(160deg, #a4491f, #7c3413);
+    border: 2px solid rgba(245,215,142,.5); position: relative;
+    box-shadow: 0 6px 18px rgba(0,0,0,.4);
+  }
+  .qian-tube::before {
+    content: ""; position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 30px; background: linear-gradient(#d9c8a0, #f5d78e);
+    border-radius: 2px;
+  }
+  .qian-tube::after {
+    content: ""; position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+    width: 18px; height: 12px; background: #f5d78e; border-radius: 4px;
+  }
+  .qian-tube.shaking { animation: shake .25s ease-in-out infinite; }
+  @keyframes shake {
+    0%, 100% { transform: rotate(-6deg) translateY(0); }
+    50% { transform: rotate(6deg) translateY(-4px); }
+  }
+  .qian-result { margin-top: 14px; }
+  .qian-head { text-align: center; margin-bottom: 10px; }
+  .qian-head .no { font-size: 13px; color: #8a93b2; letter-spacing: 3px; }
+  .qian-head .name { font-size: 18px; font-weight: 700; color: #f5d78e; margin: 6px 0; letter-spacing: 2px; }
+  .qian-poem {
+    background: rgba(0,0,0,.25); border-radius: 12px; padding: 16px 12px;
+    text-align: center; border: 1px dashed rgba(245,215,142,.35); margin-bottom: 12px;
+  }
+  .qian-poem p { font-size: 15px; line-height: 2.1; letter-spacing: 2px; color: #e8e6e3; }
+  .qian-jie { font-size: 13.5px; line-height: 1.9; color: #d5d9e6; }
+  .qian-jie b { color: #f5d78e; }
+  .qian-personal {
+    margin-top: 10px; font-size: 12.5px; color: #a9b3cc; line-height: 1.8;
+    background: rgba(245,215,142,.08); border-radius: 10px; padding: 10px 12px;
+  }
+
+  .section-hidden { display: none; }
+  footer { text-align: center; font-size: 11px; color: #5b6480; margin-top: 24px; line-height: 1.8; padding: 0 12px; }
+  #changeBtn {
+    display: none; width: 100%; margin-top: 14px; padding: 11px;
+    background: transparent; border: 1px dashed rgba(245,215,142,.4); border-radius: 12px;
+    color: #f5d78e; font-size: 13px; letter-spacing: 2px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>每日五行运势</h1>
+    <div class="sub">传统文化 · 民俗日历 · 仅供娱乐参考</div>
+  </header>
+
+  <!-- 输入区 -->
+  <div class="card" id="inputCard">
+    <h2>输入出生信息</h2>
+    <label>出生日期（公历/阳历）</label>
+    <input type="date" id="birthDate" min="1900-01-01" max="2030-12-31">
+    <div class="row2">
+      <div>
+        <label>出生时间（24小时制）</label>
+        <select id="birthHour"></select>
+      </div>
+      <div>
+        <label>性别</label>
+        <select id="gender"><option value="m">男</option><option value="f">女</option></select>
+      </div>
+    </div>
+    <button class="primary" onclick="calc()">查看今日运势</button>
+    <p class="tip">· 时间请尽量精确，时辰影响时柱与子女、晚运宫位；不确定可选中午 12:00。<br>· 排盘采用简化历法（节气按平均日期近似），结果仅供娱乐参考。</p>
+  </div>
+
+  <!-- 周公解梦 -->
+  <div class="card" id="dreamCard">
+    <h2>周公解梦</h2>
+    <label>描述你梦到的内容（例：梦见大蛇缠身、牙齿掉了、掉进水里）</label>
+    <textarea id="dreamInput" rows="3" placeholder="梦见……"></textarea>
+    <button class="primary" onclick="interpretDream()">解 梦</button>
+    <div id="dreamResults"></div>
+  </div>
+
+  <!-- 灵签抽签 -->
+  <div class="card" id="qianCard">
+    <h2>灵签抽签</h2>
+    <div class="qian-tube" id="qianTube"></div>
+    <p class="tip" style="margin:0 0 4px; text-align:center;">心中默想所求之事，再点下方按钮摇签</p>
+    <button class="primary" onclick="drawQian()">诚心摇签</button>
+    <div class="qian-result" id="qianResult"></div>
+  </div>
+
+  <button id="changeBtn" onclick="showInput()">↺ 修改出生信息</button>
+
+  <!-- 结果区 -->
+  <div id="result" class="section-hidden">
+
+    <!-- 今日八字 -->
+    <div class="card">
+      <h2>八字命盘</h2>
+      <div class="pillars" id="pillars"></div>
+      <div class="daymaster-tag" id="dmTag"></div>
+      <div class="wuxing-bar" id="wxBar"></div>
+    </div>
+
+    <!-- 今日干支 + 评分 -->
+    <div class="card">
+      <h2>今日总运 · <span id="todayGZ" style="font-size:13px;letter-spacing:1px;"></span></h2>
+      <div class="score-wrap">
+        <div class="score-num"><span id="score">--</span><small> /100</small></div>
+        <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+      </div>
+      <div class="score-desc" id="scoreDesc"></div>
+    </div>
+
+    <!-- 幸运色 + 数字 -->
+    <div class="card">
+      <h2>幸运穿搭 & 幸运数字</h2>
+      <div class="grid2">
+        <div class="mini-card">
+          <div class="t">宜穿颜色 · 旺你</div>
+          <div class="v" id="colorGood"></div>
+        </div>
+        <div class="mini-card">
+          <div class="t">少穿颜色 · 泄气</div>
+          <div class="v" id="colorBad"></div>
+        </div>
+        <div class="mini-card">
+          <div class="t">幸运数字</div>
+          <div class="v" id="luckyNums"></div>
+        </div>
+        <div class="mini-card">
+          <div class="t">贵人方位</div>
+          <div class="v" id="nobleDir"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 宜 / 忌 -->
+    <div class="card">
+      <h2>今日宜 · 忌</h2>
+      <div class="yi-ji" id="yiJi"></div>
+    </div>
+
+    <!-- 财运 / 桃花 -->
+    <div class="card">
+      <h2>财运 & 桃花</h2>
+      <div class="grid2">
+        <div class="mini-card">
+          <div class="t">今日财运</div>
+          <div class="v" id="wealth"></div>
+        </div>
+        <div class="mini-card">
+          <div class="t">今日桃花</div>
+          <div class="v" id="peach"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      本页面基于传统八字命理的简化算法生成，仅供文化娱乐参考，不构成任何决策依据。<br>
+      © 民俗日历 · 输入数据仅在本机计算，不会上传。
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ================= 基础数据 ================= */
+const TIAN_GAN = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const DI_ZHI   = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const GAN_WX   = ["木","木","火","火","土","土","金","金","水","水"];   // 天干五行
+const GAN_YY   = [1,0,1,0,1,0,1,0,1,0];                                // 1阳 0阴
+const ZHI_WX   = ["水","土","木","木","土","火","火","土","金","金","土","水"];
+const WX_ORDER = ["木","火","土","金","水"];
+const WX_COLOR_MAP = {
+  "木": [["绿", "#3a7d2c"], ["青", "#2f8f6b"], ["翠", "#1f9e55"]],
+  "火": [["红", "#d64141"], ["橙", "#e07b39"], ["紫", "#8f4fd1"]],
+  "土": [["黄", "#d9a441"], ["米", "#c8b48a"], ["咖", "#8b5e3c"]],
+  "金": [["白", "#e8e6e3"], ["金", "#d4af37"], ["银", "#b8c4d0"]],
+  "水": [["黑", "#222222"], ["蓝", "#3478be"], ["灰", "#6e7a8a"]]
+};
+const WX_DIR = {"木":"东方","火":"南方","土":"中宫","金":"西方","水":"北方"};
+const WX_NUM = {"水":[1,6],"火":[2,7],"木":[3,8],"金":[4,9],"土":[5,10]}; // 河图数
+const WX_ACTIVITY = {
+  "木": ["晨间散步、亲近花草","整理书桌、开始新计划","瑜伽拉伸、深呼吸练习"],
+  "火": ["主动社交、表达想法","穿亮色出门、晒晒太阳","聚会约会、结识新朋友"],
+  "土": ["踏实做事、处理账务","下厨做饭、整理房间","陪伴家人、稳步推进工作"],
+  "金": ["果断决策、收尾清理","运动健身、剪个头发","谈判签约、精简开支"],
+  "水": ["静心冥想、早睡养神","读书学习、记录灵感","听雨观水、复盘计划"]
+};
+const WX_AVOID = {
+  "木": ["固执己见、钻牛角尖","过度焦虑未来"],
+  "火": ["冲动消费、口舌之争","熬夜上火、情绪化决定"],
+  "土": ["犹豫拖延、原地打转","大额投资、轻信承诺"],
+  "金": ["与人硬碰硬、翻旧账","过度挑剔细节"],
+  "水": ["摸鱼躺平、随波逐流","重要签约、轻率借贷"]
+};
+/* 节气近似日（月柱地支分界，按公历平均日期） */
+const JIE_QI_DAYS = [ /* 小寒1/6, 立春2/4, 惊蛰3/6, 清明4/5, 立夏5/6, 芒种6/6, 小暑7/7, 立秋8/8, 白露9/8, 寒露10/8, 立冬11/7, 大雪12/7 */
+  6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 7, 7 ]; // 每月分界日
+const SHENG_XIAO = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const PEACH_MAP = {"寅":"卯","午":"卯","戌":"卯","申":"酉","子":"酉","辰":"酉","巳":"午","酉":"午","丑":"午","亥":"子","卯":"子","未":"子"};
+const WX_REL_DESC = { /* 今日干十神 → 一句话 */
+  "比肩":"同频共振，合作顺利", "劫财":"防破小财，慎借贷",
+  "食神":"灵感涌现，宜表达创作", "伤官":"才华外露，但口舌需防",
+  "偏财":"意外之财机缘，宜把握", "正财":"正财稳定，宜踏实进账",
+  "七杀":"压力偏大，宜稳不宜急", "正官":"规矩得护，宜守正办事",
+  "偏印":"直觉敏锐，宜学习思考", "正印":"贵人扶持，宜请益长辈"
+};
+
+/* ================= 干支计算 ================= */
+function dayGZIndex(date){ // 以 1912-02-18 = 甲子日 为锚点
+  const anchor = new Date(1912, 1, 18);
+  const diff = Math.floor((date - anchor) / 86400000);
+  return ((diff % 60) + 60) % 60;
+}
+function yearGZIndex(date){
+  let y = date.getFullYear();
+  const m = date.getMonth() + 1, d = date.getDate();
+  if (m < 2 || (m === 2 && d < 4)) y -= 1;   // 立春前算上一年
+  return ((y - 4) % 60 + 60) % 60;
+}
+function monthGZIndex(date){
+  // 节气分界 → 月支（寅=正月起于立春）
+  let idx = date.getMonth();                 // 0=1月
+  const day = date.getDate();
+  const boundary = JIE_QI_DAYS[idx];
+  let monthBranch; // 0..11 对应 子..亥
+  if (day >= boundary) {
+    // 已过本月节气：1月过小寒→丑(1)，2月过立春→寅(2)...
+    monthBranch = idx;                        // 1月(0)→丑(1), 2月(1)→寅(2)...
+  } else {
+    monthBranch = (idx + 11) % 12;            // 未过节气则取上一节
+  }
+  const yearIdx = yearGZIndex(date);
+  const yearStem = yearIdx % 10;
+  // 五虎遁：甲己→丙寅起, 乙庚→戊寅, 丙辛→庚寅, 丁壬→壬寅, 戊癸→甲寅
+  const firstMonthStem = [2,4,6,8,0][yearStem % 5];
+  const monthFromYin = (monthBranch - 2 + 12) % 12; // 距寅月数
+  const monthStem = (firstMonthStem + monthFromYin) % 10;
+  return gzIndex(monthStem, monthBranch);
+}
+// 正确的干支序号（0..59）：干 idx 和 支 idx，两者均递增 60 轮回
+function gzIndex(ganIdx, zhiIdx){
+  // gan 和 zhi 奇偶一致才有合法组合；先对齐
+  let g = ganIdx, z = zhiIdx;
+  if ((g % 2) !== (z % 2)) z = (z + 11) % 12; // 极少触发的兜底
+  for (let i = 0; i < 60; i++){
+    if (i % 10 === g && i % 12 === z) return i;
+  }
+  return 0;
+}
+function hourGZIndex(dayGanIdx, hour){
+  // 五鼠遁：甲己→甲子起，乙庚→丙子，丙辛→戊子，丁壬→庚子，戊癸→壬子
+  const firstHourStem = [0,2,4,6,8][dayGanIdx % 5];
+  let hBranch = Math.floor(((hour + 1) % 24) / 2); // 23-1→子 ... 21-23→亥
+  const hStem = (firstHourStem + hBranch) % 10;
+  return gzIndex(hStem, hBranch);
+}
+
+/* ================= 命盘分析 ================= */
+function analyze(dateStr, hour, gender){
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const birth = new Date(y, m - 1, d, hour, 0);
+
+  const yIdx = yearGZIndex(birth);
+  const mIdx = monthGZIndex(birth);
+  const dIdx = dayGZIndex(birth);
+  const hIdx = hourGZIndex(dIdx % 10, hour);
+
+  const ganIdxs = [yIdx % 10, mIdx % 10, dIdx % 10, hIdx % 10];
+  const zhiIdxs = [yIdx % 12, mIdx % 12, dIdx % 12, hIdx % 12];
+
+  const pillars = ["年柱","月柱","日柱","时柱"].map((label, i) => ({
+    label, gan: TIAN_GAN[ganIdxs[i]], zhi: DI_ZHI[zhiIdxs[i]],
+    ganWx: GAN_WX[ganIdxs[i]], zhiWx: ZHI_WX[zhiIdxs[i]]
+  }));
+
+  // 五行计数（天干4 + 地支4，地支取本气）
+  const wxCount = {"木":0,"火":0,"土":0,"金":0,"水":0};
+  ganIdxs.forEach(i => wxCount[GAN_WX[i]]++);
+  zhiIdxs.forEach(i => wxCount[ZHI_WX[i]]++);
+
+  const dmGanIdx = ganIdxs[2];
+  const dmWx = GAN_WX[dmGanIdx];
+  const dmYy = GAN_YY[dmGanIdx];
+  const shengWx = {"木":"火","火":"土","土":"金","金":"水","水":"木"}[dmWx];      // 我生
+  const keWx    = {"木":"土","火":"金","土":"水","金":"木","水":"火"}[dmWx];     // 我克
+  const shengMe = {"木":"水","火":"木","土":"火","金":"土","水":"金"}[dmWx];     // 生我
+  const keMe    = {"木":"金","火":"水","土":"木","金":"火","水":"土"}[dmWx];     // 克我
+
+  const support = wxCount[dmWx] + wxCount[shengMe];      // 同我 + 生我
+  const drain   = wxCount[shengWx] + wxCount[keWx] + wxCount[keMe]; // 我生+我克+克我
+  const strong  = support >= drain;
+
+  // 喜用神：弱则喜生扶（印比），强则喜克泄耗
+  let xiWxSet;
+  if (strong) xiWxSet = [shengWx, keWx, keMe];   // 泄、耗
+  else        xiWxSet = [shengMe, dmWx];         // 印、比
+  const jiWxSet = WX_ORDER.filter(w => !xiWxSet.includes(w));
+
+  // 桃花位（年支、日支两查）
+  const peach = [...new Set([PEACH_MAP[DI_ZHI[zhiIdxs[0]]], PEACH_MAP[DI_ZHI[zhiIdxs[2]]]])];
+
+  return { birth, pillars, ganIdxs, zhiIdxs, wxCount, dmWx, dmYy, dmGanIdx,
+           strong, xiWxSet, jiWxSet, peach, gender,
+           shengWx, keWx, shengMe, keMe };
+}
+
+/* ================= 周公解梦词典 ================= */
+/* 格式：关键词: [吉凶(吉/凶/中), 解释] */
+const DREAM_DICT = {
+  "蛇":["中","梦见蛇主欲望与财运。蛇缠身主财运将至但纠缠难解；女人梦蛇需留意感情中的暧昧纠结；被蛇咬主破财消灾，或有小人暗算。"],
+  "大蛇":["中","梦见大蛇，传统解为主权势与大机遇，但亦暗示压力深重，防得意时被人掣肘。"],
+  "打蛇":["吉","梦见打蛇或杀蛇，主能克服障碍、降服小人，近期困境将有转机。"],
+  "龙":["吉","梦见龙为大吉之兆，主贵人运、事业腾飞，或有掌权得势之机；乘龙升天主名望大增。"],
+  "老虎":["中","梦见老虎，主面临强有力的对手或压力，若虎不伤人则为威势加身，遇险有惊无险。"],
+  "狗":["中","梦见狗主朋友与忠诚。犬吠主是非口舌；被狗咬主与朋友生嫌隙；狗摇尾主得贵人相助。"],
+  "猫":["中","梦见猫，传统解为身边有狡黠之人，提防口蜜腹剑；亦主直觉敏锐，宜静观其变。"],
+  "鱼":["吉","梦见鱼为吉兆，鱼主余、主财。抓鱼、得鱼主进财；鱼跃主机遇临门；死鱼则防破财。"],
+  "鸟":["吉","梦见鸟主消息与自由，飞鸟入怀主喜事临门；鸟鸣主有好消息传来。"],
+  "鸡":["中","梦见鸡主衣食与时机。鸡鸣主警醒、时机将至；杀鸡主得财但费心。"],
+  "马":["吉","梦见马主奔波与功名，骑马主升迁得意；马失前蹄防急中出错。"],
+  "牛":["吉","梦见牛主勤劳得报、家业稳固，牛耕田主付出终有收获。"],
+  "猪":["吉","梦见猪主富足，胖猪主财禄充盈；猪圈干净主家宅安宁。"],
+  "老鼠":["凶","梦见老鼠主破财与口舌，提防身边暗耗钱财的小人。"],
+  "兔子":["中","梦见兔子主机敏与贵人，但防心思摇摆、错失时机。"],
+  "乌龟":["吉","梦见乌龟主长寿稳固、贵人缓至，谋事宜稳不宜急。"],
+  "蝴蝶":["中","梦见蝴蝶主情缘浪漫，亦主浮华虚美，防纸醉金迷。"],
+  "蜘蛛":["中","梦见蜘蛛主布局与牵连，织网主谋划将成；被蛛网缠住防身陷人情纠葛。"],
+  "蚂蚁":["中","梦见蚂蚁主琐碎事务缠身，宜理清头绪、小事化简。"],
+  "水":["中","梦见水主财与情绪。清水主财源清顺；洪水、大水主财势汹涌亦主压力；落水主陷入困境，宜求助贵人。"],
+  "大海":["吉","梦见大海主胸怀与机遇广大，风平浪静主诸事顺遂；风浪大作防情绪起伏。"],
+  "洪水":["凶","梦见洪水主情绪失控、财来财去，重大决定宜暂缓。"],
+  "下雨":["中","梦见下雨主滋润与忧愁参半，细雨主顺遂；暴雨主情绪宣泄，过后天晴。"],
+  "雪":["中","梦见下雪主洁白与冷藏，主事有转机但节奏放缓；雪中行走主孤身前行，宜自珍。"],
+  "火":["中","梦见火主兴旺与急躁。灶火、旺火主家业红火；大火烧房主口舌急躁，防因怒失财。"],
+  "着火":["凶","梦见着火，传统解为红运当头亦主躁动破财，心急之事宜冷静再决。"],
+  "山":["吉","梦见山主靠山与阻碍并存，登山主步步高升；下山主运势回落宜守。"],
+  "树":["吉","梦见大树主根基与庇护，枝繁叶茂主家业兴；枯树主运滞，宜养精蓄锐。"],
+  "花":["吉","梦见花开主喜事与姻缘，花开正艳主情运正旺；花谢主缘尽或时机已过。"],
+  "太阳":["吉","梦见太阳主光明、贵人运旺，旭日东升主运势上行。"],
+  "月亮":["中","梦见月亮主阴柔之事与情感，满月主圆满；残月主心有缺憾，宜释怀。"],
+  "星星":["中","梦见星星主愿望与远景，繁星满天主希望众多；流星主转瞬即逝的机会，宜速把握。"],
+  "地震":["凶","梦见地震主根基动摇，工作、感情或健康有变动的预感，宜提前稳固。"],
+  "死人":["中","梦见死人，传统解为「梦见死者主生」——旧事将了、新运将启，宜告别过去；亦提醒关注长辈健康。"],
+  "棺材":["吉","梦见棺材，谐音「官财」，传统解为主升官发财，是大吉之梦，尤其利于谋职谋财。"],
+  "婴儿":["吉","梦见婴儿主新生与希望，新计划、新感情将萌芽；婴儿啼哭主愿望将成但需耐心。"],
+  "小孩":["中","梦见小孩主纯真与牵挂，亦主有小麻烦缠身但无大碍。"],
+  "老人":["中","梦见老人主贵人提醒，家中长辈的忠告值得倾听。"],
+  "结婚":["吉","梦见结婚主喜事与承诺，未婚者梦之主姻缘将近；已婚者梦之主感情升温。"],
+  "婚礼":["吉","梦见婚礼主喜庆临门，社交圈将有新联结。"],
+  "怀孕":["吉","梦见怀孕主酝酿中的新计划即将成形，付出将有成果。"],
+  "前任":["中","梦见前任主旧情未清、心有留恋，宜直面内心真实需求，而非回头。"],
+  "明星":["中","梦见明星主向往与自我期许，渴望被看见；宜把目光收回自身成长。"],
+  "鬼":["凶","梦见鬼主心有隐忧或亏欠之事，宜坦诚面对、化解释怀。"],
+  "被追赶":["凶","梦见被追赶主压力与逃避，现实中有未面对的问题，宜迎难而解。"],
+  "打架":["凶","梦见打架主矛盾将起，与人相处宜退一步海阔天空。"],
+  "杀人":["凶","梦见杀人主压抑的情绪亟待释放，宜疏不宜堵，谨防迁怒于人。"],
+  "掉牙":["中","梦见掉牙，传统解为「骨肉之亲」的牵挂或言语失当的提醒，亦主成长蜕变的阵痛。"],
+  "牙齿掉了":["中","梦见牙齿掉了，主亲人健康需留意，或口舌谨慎；亦象征放下旧我。"],
+  "头发":["中","梦见头发主烦恼丝，剪发主断烦恼、重新开始；头发变长主思绪纷繁。"],
+  "血":["凶","梦见血主耗损与警示，财务、精力防流失；亦主有意外之财的可能（见血主红）。"],
+  "裸体":["中","梦见裸体主坦诚与不安并存，怕被看穿的担忧，宜建立自信。"],
+  "生病":["中","梦见生病主身体提醒与运势休整，宜早睡调息、体检防患。"],
+  "死亡":["中","梦见自己死亡，传统解为「向死而生」——旧阶段结束、新阶段开启，大转变之兆。"],
+  "钱":["吉","梦见钱主财与价值感。捡钱主机遇将至；丢钱主防疏漏破财。"],
+  "捡钱":["吉","梦见捡钱主意外之财与机遇，但「横财」亦须防来历不明之利。"],
+  "丢钱":["凶","梦见丢钱主破财预警，近期勿大额支出与轻信投资。"],
+  "金子":["吉","梦见金子主真价值被发现，努力将有贵重的回报。"],
+  "房子":["中","梦见房子主自身与家运。新房主新生活开启；破房主根基需修整。"],
+  "搬家":["中","梦见搬家主环境或心态的转换，告别旧局、迎接新局。"],
+  "楼梯":["中","梦见楼梯主运程起落，上楼主进取有利；下楼主暂且守成。"],
+  "电梯":["中","梦见电梯主运势的起伏受外力左右，顺势而为即可，勿强求。"],
+  "桥":["吉","梦见桥主过渡与联结，过桥主困境将通，此岸到彼岸的转机。"],
+  "开车":["中","梦见开车主人生方向盘在手，车况平稳主顺；刹车失灵主失控焦虑，宜放慢节奏。"],
+  "飞机":["中","梦见飞机主远行与跃升，起飞主事业上升；坠落主对失败的担忧，宜做足准备。"],
+  "火车":["中","梦见火车主按部就班的进程，赶上车主时机正好；误车主错失时机，宜提早规划。"],
+  "船":["中","梦见船主远行与生意，船行平稳主财路通畅；风浪主波折但有惊无险。"],
+  "钟表":["中","梦见钟表主时间紧迫感，倒计时的心态，宜分清轻重缓急。"],
+  "手机":["中","梦见手机主沟通与联结，手机坏主沟通不畅，重要事宜当面说清。"],
+  "镜子":["中","梦见镜子主自我审视，镜中清晰主自知之明；镜子碎裂主自我形象重塑。"],
+  "灯":["吉","梦见灯主希望与指引，点灯主前途渐明；灯灭主暂时的迷茫，宜静待天明。"],
+  "考试":["中","梦见考试主现实中的检验与焦虑，多为压力投射；亦主准备充分则无惧考验。"],
+  "迷路":["凶","梦见迷路主方向感缺失，对现状的迷茫，宜暂停下来重新定位目标。"],
+  "迟到":["凶","梦见迟到主对错失机会的焦虑，现实中的deadline需提前应对。"],
+  "飞":["吉","梦见飞翔主自由与突破，摆脱束缚、志向高远，近期宜大胆尝试。"],
+  "掉落":["凶","梦见坠落主失控感与不安全感，事业或感情中的支撑感动摇，宜稳固根基。"],
+  "游泳":["中","梦见游泳主在情绪与环境中自如前行，会游主从容应对；沉浮主力有不逮，宜借力。"],
+  "跑步":["中","梦见跑步主进取与逃避并存，追赶目标则吉；逃离追兵则需面对问题本身。"],
+  "洗澡":["吉","梦见洗澡主洗涤旧尘、运势更新，去旧迎新之兆。"],
+  "吃饭":["吉","梦见吃饭主食禄与满足，与人共餐主人缘兴旺。"],
+  "喝水":["中","梦见喝水主滋养与需求，口渴难解主心有匮乏感，宜自我关爱。"],
+  "哭泣":["吉","梦见哭泣，传统解为「梦中悲泣主大吉」——情绪释放后否极泰来。"],
+  "大笑":["中","梦见大笑主喜乐亦主亢奋，乐极之时谨防忘形。"]
+};
+/* ================= 今日运势 ================= */
+
+function tenGod(tGanIdx, dmGanIdx){
+  const tWx = GAN_WX[tGanIdx], dmWx = GAN_WX[dmGanIdx];
+  const sameYY = GAN_YY[tGanIdx] === GAN_YY[dmGanIdx];
+  const sheng = {"木":"火","火":"土","土":"金","金":"水","水":"木"};
+  const ke    = {"木":"土","火":"金","土":"水","金":"木","水":"火"};
+  if (tWx === dmWx) return sameYY ? "比肩" : "劫财";
+  if (sheng[dmWx] === tWx) return sameYY ? "食神" : "伤官";
+  if (ke[dmWx] === tWx) return sameYY ? "偏财" : "正财";
+  if (sheng[tWx] === dmWx) return sameYY ? "偏印" : "正印";
+  return sameYY ? "七杀" : "正官"; // 克我者
+}
+function dailyFortune(a, now){
+  const tDIdx = dayGZIndex(now);
+  const tGanIdx = tDIdx % 10, tZhiIdx = tDIdx % 12;
+  const tWx = GAN_WX[tGanIdx];
+  const god = tenGod(tGanIdx, a.dmGanIdx);
+
+  // 确定性伪随机（当天+命盘 → 稳定波动）
+  const seed = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate()
+             + a.dmGanIdx * 37 + (a.gender === "m" ? 7 : 13);
+  const rnd = (n) => { let x = (seed * 9301 + 49297 * n) % 233280; return x / 233280; };
+
+  // 十神基础分
+  const base = {
+    "正财":86,"偏财":82,"食神":80,"正印":84,"比肩":72,
+    "伤官":62,"正官":70,"七杀":55,"劫财":52,"偏印":66
+  }[god];
+  const score = Math.max(38, Math.min(98, Math.round(base + (rnd(1) - 0.5) * 18)));
+
+  // 财运：今日干是否为我克之财
+  const isWealthDay = tWx === a.keWx;
+  const wealthType = isWealthDay ? (GAN_YY[tGanIdx] === a.dmYy ? "偏财" : "正财") : null;
+  const wealthScore = Math.round(Math.min(98, Math.max(20,
+    (isWealthDay ? 82 : 55) + (rnd(2) - 0.5) * 20)));
+
+  // 桃花：今日支是否为桃花位
+  const isPeachDay = a.peach.includes(DI_ZHI[tZhiIdx]);
+  const peachScore = Math.round(Math.min(98, Math.max(20,
+    (isPeachDay ? 85 : 52) + (rnd(3) - 0.5) * 22)));
+
+  // 宜忌：取喜用第一五行 / 忌神第一五行
+  const yiWx = a.xiWxSet[rnd(4) < 0.6 ? 0 : (a.xiWxSet.length > 1 ? 1 : 0)];
+  const jiWx = a.jiWxSet[rnd(5) < 0.6 ? 0 : (a.jiWxSet.length > 1 ? 1 : 0)];
+
+  return { tDIdx, tGanIdx, tZhiIdx, tWx, god, score, isWealthDay, wealthType,
+           wealthScore, isPeachDay, peachScore, yiWx, jiWx, rnd };
+}
+</script>
+
+<script>
+/* ================= 灵签签库 ================= */
+/* 格式：签号 · 题名 / 等级 / 签诗四句 / 解签 */
+const QIAN = [
+  { no:1, name:"姜太公钓渭", grade:"上上",
+    poem:["旭日东升照玉台","春风得意百花开","行人指路前程远","一举成名天降财"],
+    jie:"大吉之签。事业起步即顺，有贵人指路，求名求利皆宜。把握当下机遇，大胆前行。" },
+  { no:2, name:"金榜题名", grade:"上上",
+    poem:["十年寒窗志未磨","今朝金榜姓名多","青云有路终须到","锦上添花喜气和"],
+    jie:"苦尽甘来之签。过往的坚持将在近期开花结果，考试、面试、评审类事宜尤佳。" },
+  { no:3, name:"枯木逢春", grade:"上上",
+    poem:["久旱枯苗遇甘霖","枯木逢春叶又新","困顿多年终有报","时来运转喜临门"],
+    jie:"转运之签。低谷期即将结束，运势明显回升，宜主动重启搁置已久的计划。" },
+  { no:4, name:"天赐良缘", grade:"上上",
+    poem:["月老红绳系足来","天作之合两和谐","良缘本是前生定","不必强求自然谐"],
+    jie:"姻缘大吉之签。感情之事水到渠成，不宜刻意强求，顺其自然反得佳果。" },
+  { no:5, name:"春风得意", grade:"上",
+    poem:["春风花草扑鼻香","骏马康庄道自光","谋望从来心遂意","功名自有贵人帮"],
+    jie:"吉签。谋事顺遂、心情舒畅，重要场合有贵人助力，宜乘势推进。" },
+  { no:6, name:"夜行遇灯", grade:"上",
+    poem:["夜行有灯路自明","天寒有盖不伤身","心怀善念天相助","逢凶化吉事事成"],
+    jie:"吉签。纵有小波折，亦能化险为夷。心存善念、行有正道，诸事自安。" },
+  { no:7, name:"春种秋收", grade:"上",
+    poem:["春天播种勤耕田","秋来五谷满仓圆","一分辛苦一分获","莫问收成且向前"],
+    jie:"吉签。所求皆有回报，但需耐心等待时令。眼下多耕耘，收成在后头。" },
+  { no:8, name:"旱苗得雨", grade:"上",
+    poem:["旱苗得雨茂枝全","谋望求财喜自然","病暗渐消名渐显","讼宜和解好团圆"],
+    jie:"吉签。困局得解，财运渐旺，疾病渐愈，纠纷宜和解不宜硬争。" },
+  { no:9, name:"苏秦得志", grade:"上",
+    poem:["昔日讥嫌不足夸","今朝放荡思无涯","一朝得志风云起","笑看来时万人家"],
+    jie:"吉签。曾被看轻的经历将成为逆袭的伏笔，近期有望扬眉吐气。" },
+  { no:10, name:"玉洁冰清", grade:"上",
+    poem:["玉洁冰清品自高","虚心实腹乐陶陶","不贪不求心常泰","自有清风送福桃"],
+    jie:"吉签。以诚待人、以正行事，福报自来。忌投机取巧，守正则顺。" },
+  { no:11, name:"海屋添筹", grade:"中平",
+    poem:["海屋添筹岁月长","悠悠度日守家常","不争朝夕争来日","平淡之中福自藏"],
+    jie:"平签。不宜大动，宜守成蓄力。安稳度日、积小成多，静待时机。" },
+  { no:12, name:"云开月明", grade:"中平",
+    poem:["浮云蔽月几多时","云散重光照旧枝","莫为眼前昏暗扰","耐心守得月圆期"],
+    jie:"平签。眼下有些许迷雾与延迟，但只是暂时。耐心等待，局势自会明朗。",
+  },
+  { no:13, name:"风平浪静", grade:"中平",
+    poem:["风平浪静好行船","上下分明事不难","守旧经营无大过","创新冒险且从缓"],
+    jie:"平签。宜守不宜攻，按既定节奏推进无大过，激进冒险之事暂缓。" },
+  { no:14, name:"路遇歧途", grade:"中平",
+    poem:["行至中途路未明","东西南北费思量","不须着急频回首","且问初心再启程"],
+    jie:"平签。面临选择而犹豫不定，回问初心、做足功课，答案自现。" },
+  { no:15, name:"磨杵成针", grade:"中平",
+    poem:["铁杵磨成绣花针","功夫深处自通神","功名迟速寻常事","耐得烦劳始见真"],
+    jie:"平签。所求之事进度偏慢，但并非无望。功夫到位，水滴石穿。" },
+  { no:16, name:"舟行缓渡", grade:"中平",
+    poem:["轻舟缓渡水悠悠","两岸风光次第收","不必扬帆争一快","平安到岸胜淹留"],
+    jie:"平签。事情按部就班推进即可，求快反易出错，稳住节奏为上。" },
+  { no:17, name:"月照孤舟", grade:"中",
+    poem:["月照孤舟夜未眠","风波暗起浪相连","亲朋助力嫌微薄","自渡方为第一船"],
+    jie:"中签。外援不足，此事主要靠自己。收紧开支、收敛锋芒，独力熬过此段。" },
+  { no:18, name:"雾里看花", grade:"中",
+    poem:["雾里看花分外迷","真真假假费猜疑","眼前利益休轻取","看破方知是有期"],
+    jie:"中签。信息不透明，谨防被表象迷惑。重大签约、投资、承诺需反复核实。" },
+  { no:19, name:"逆水行舟", grade:"中",
+    poem:["逆水行舟用力撑","一篙松劲退千寻","时乖莫怨东风少","养得帆强待顺风"],
+    jie:"中签。阻力偏大、事倍功半，不宜硬拼。修养实力，等待顺风再行。" },
+  { no:20, name:"旧宅生尘", grade:"中",
+    poem:["旧宅生尘久未扫","故人音信两萧萧","与其怀旧伤怀抱","不如迎新把尘抛"],
+    jie:"中签。旧的束缚拖住了脚步，宜断舍离：清理旧物、旧关系、旧执念。" },
+  { no:21, name:"急流勇退", grade:"下",
+    poem:["急流之中舟自危","不知进退恐伤悲","见好就收真智者","留得青山待可为"],
+    jie:"下签。凡事见好就收，忌恋战、忌贪多。收缩战线、保住本金与精力为上策。" },
+  { no:22, name:"霜重花残", grade:"下",
+    poem:["霜重花残枝自寒","多情反被薄情瞒","不如静守炉边暖","雪化春来自有欢"],
+    jie:"下签。感情或合作中防被辜负、防口舌生非。此刻宜静养、宜求助、不宜决裂，寒冬过后自有春天。" },
+  { no:23, name:"守株待兔", grade:"下",
+    poem:["守株待兔误耕田","坐等缘分总惘然","侥幸一得非长策","自展双翼上青天"],
+    jie:"下签。提醒勿存侥幸、勿坐等机会。天上不会掉馅饼，主动出击才有转机。" },
+  { no:24, name:"浪里行舟", grade:"下",
+    poem:["浪里行舟险万分","风波未定莫频频","退步原来是向前","静待风平再启程"],
+    jie:"下签。此段运势颠簸，不宜远行、不宜大额投入、不宜与人争执。退一步守稳，即是胜利。"
+  }
+];
+const QIAN_GRADE = {
+  "上上": ["badge-ji","上上签","上吉"],
+  "上":   ["badge-ji","上签","吉"],
+  "中平": ["badge-zhong","中平签","平"],
+  "中":   ["badge-zhong","中签","小凶 · 谨慎"],
+  "下":   ["badge-xiong","下签","凶 · 宜守"]
+};
+function drawQian(){
+  const tube = document.getElementById("qianTube");
+  const box = document.getElementById("qianResult");
+  tube.classList.add("shaking");
+  box.innerHTML = '<div class="dream-fallback" style="text-align:center">签筒摇动中……</div>';
+  setTimeout(() => {
+    tube.classList.remove("shaking");
+    const q = QIAN[Math.floor(Math.random() * QIAN.length)];
+    const g = QIAN_GRADE[q.grade];
+    let personal = "";
+    if (lastAnalysis) {
+      personal = '<div class="qian-personal">结合你的命盘（日主' + lastAnalysis.dmWx +
+        '）：宜穿<b style="color:#f5d78e">' + lastAnalysis.xiWxSet[0] +
+        '</b>色系添运，幸运数字为 ' + WX_NUM[lastAnalysis.xiWxSet[0]].join("、") +
+        '；解签中的建议可结合「今日宜忌」一起参考。</div>';
+    }
+    box.innerHTML = `
+      <div class="qian-head">
+        <div class="no">第 ${q.no} 签 · ${QIAN.length} 签灵签</div>
+        <div class="name">${q.name}</div>
+        <span class="dream-badge ${g[0]}">${g[1]}（${g[2]}）</span>
+      </div>
+      <div class="qian-poem"><p>${q.poem.join("<br>")}</p></div>
+      <div class="qian-jie"><b>解曰：</b>${q.jie}</div>
+      ${personal}
+      <div class="dream-fallback">一签一事，所求之事以本次抽取为准。签文仅供参考娱乐，人生走向终在自己手中。</div>`;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, 900);
+}
+
+/* ================= 解梦逻辑 ================= */
+
+const BADGE = {"吉":["badge-ji","吉"],"凶":["badge-xiong","凶"],"中":["badge-zhong","中平"]};
+function interpretDream(){
+  const raw = document.getElementById("dreamInput").value.trim();
+  const box = document.getElementById("dreamResults");
+  if (!raw) { box.innerHTML = '<div class="dream-fallback">请先写下你梦到的内容。</div>'; return; }
+  const text = raw.replace(/\s+/g, "");
+  const hits = [];
+  for (const k in DREAM_DICT) {
+    if (text.includes(k)) hits.push([k, DREAM_DICT[k]]);
+  }
+  hits.sort((a, b) => b[0].length - a[0].length); // 长词（更具体）优先
+  if (hits.length === 0) {
+    box.innerHTML = '<div class="dream-fallback">暂未收录与此梦直接对应的条目。可尝试换一个核心意象重试（如：蛇、水、掉牙、被追赶、飞翔），或参考「今日宜忌」安顿身心。</div>';
+    return;
+  }
+  const shown = hits.slice(0, 6);
+  box.innerHTML = shown.map(([k, [luck, txt]]) => `
+    <div class="dream-item">
+      <div class="head"><span class="sym">梦见「${k}」</span><span class="dream-badge ${BADGE[luck][0]}">${BADGE[luck][1]}</span></div>
+      <div class="txt">${txt}</div>
+    </div>`).join("") +
+    (hits.length > 6 ? `<div class="dream-fallback">共命中 ${hits.length} 个意象，已展示最具体的 6 条。</div>` : "") +
+    '<div class="dream-fallback">解梦沿用传统《周公解梦》的象征体系，仅供参考娱乐，切勿据此做重要决定。</div>';
+}
+
+/* ================= 界面渲染 ================= */
+const hourSel = document.getElementById("birthHour");
+for (let h = 0; h < 24; h++){
+  const opt = document.createElement("option");
+  opt.value = h;
+  const branch = DI_ZHI[Math.floor(((h + 1) % 24) / 2)];
+  opt.textContent = String(h).padStart(2,"0") + ":00（" + branch + "时）";
+  if (h === 12) opt.selected = true;
+  hourSel.appendChild(opt);
+}
+// 默认日期
+document.getElementById("birthDate").value = "1995-06-15";
+
+let lastAnalysis = null;
+
+function colorChips(wxList, count){
+  const out = [];
+  wxList.forEach(wx => {
+    WX_COLOR_MAP[wx].slice(0, count !== undefined ? count : 3).forEach(([name, hex]) => {
+      out.push(`<span class="color-dot" style="background:${hex}"></span>${name}`);
+    });
+  });
+  return out.slice(0, 4).join("　") || "—";
+}
+function luckStars(score){
+  return "★".repeat(Math.round(score / 20)) + "☆".repeat(5 - Math.round(score / 20));
+}
+
+function calc(){
+  const dateStr = document.getElementById("birthDate").value;
+  const hour = parseInt(hourSel.value, 10);
+  const gender = document.getElementById("gender").value;
+  if (!dateStr) { alert("请先选择出生日期"); return; }
+
+  const a = analyze(dateStr, hour, gender);
+  lastAnalysis = a;
+  const now = new Date();
+  const f = dailyFortune(a, now);
+
+  // —— 命盘 ——
+  document.getElementById("pillars").innerHTML = a.pillars.map(p => `
+    <div class="pillar">
+      <div class="plabel">${p.label}</div>
+      <div class="box">${p.gan}<span class="wx">${p.zhi}</span><span class="wx">${p.ganWx}${p.zhiWx}</span></div>
+    </div>`).join("");
+  const strongTxt = a.strong ? "偏旺" : "偏弱";
+  const xiTxt = a.xiWxSet.join("、");
+  document.getElementById("dmTag").innerHTML =
+    `日主 <b style="font-size:17px">${a.pillars[2].gan}${a.pillars[2].zhi}</b>（${a.dmWx}）· 身${strongTxt} · 喜用：${xiTxt}`;
+
+  // 五行条
+  const maxWx = Math.max(...Object.values(a.wxCount), 1);
+  document.getElementById("wxBar").innerHTML = WX_ORDER.map(w => `
+    <div class="wx-seg wx-${WX_ORDER.indexOf(w)}" title="${w} ${a.wxCount[w]}">
+      ${w}<br><b>${a.wxCount[w]}</b>
+    </div>`).join("");
+
+  // —— 今日总运 ——
+  document.getElementById("todayGZ").textContent =
+    `农历干支 ${TIAN_GAN[f.tGanIdx]}${DI_ZHI[f.tZhiIdx]} · 属${SHENG_XIAO[f.tZhiIdx]}日 · 今日十神「${f.god}」`;
+  document.getElementById("score").textContent = f.score;
+  document.getElementById("scoreFill").style.width = f.score + "%";
+  const grade = f.score >= 85 ? "大吉" : f.score >= 70 ? "吉" : f.score >= 55 ? "平" : "需谨慎";
+  document.getElementById("scoreDesc").innerHTML =
+    `<b style="color:#f5d78e">${grade}</b> —— ${WX_REL_DESC[f.god]}。<br>` +
+    `日主${a.dmWx}，今日遇${f.tWx}（${f.god}），` +
+    (f.score >= 70 ? "整体气场顺遂，适合主动出击。" : "气场略有阻滞，稳字当头，谋定后动。");
+
+  // —— 幸运穿搭 & 数字 ——
+  document.getElementById("colorGood").innerHTML = colorChips(a.xiWxSet);
+  document.getElementById("colorBad").innerHTML = colorChips(a.jiWxSet, 2);
+  const nums = [];
+  a.xiWxSet.forEach(wx => nums.push(...WX_NUM[wx]));
+  document.getElementById("luckyNums").innerHTML =
+    [...new Set(nums)].slice(0, 6).map(n => `<span class="num-badge">${n}</span>`).join("") +
+    (a.xiWxSet.length ? `<div style="font-size:11px;color:#8a93b2;margin-top:6px">依据喜用「${xiTxt}」之河图数</div>` : "");
+  const dirWx = a.xiWxSet[0];
+  document.getElementById("nobleDir").innerHTML =
+    `<b style="color:#f5d78e">${WX_DIR[dirWx]}</b> 方<br><span style="font-size:12px;color:#8a93b2">谈事见贵可朝此方位</span>`;
+
+  // —— 宜忌 ——
+  const yiActs = WX_ACTIVITY[f.yiWx], jiActs = WX_AVOID[f.jiWx];
+  let yiHtml = `<div class="item"><span class="tag yi">宜</span><div>${yiActs.map(s => "· " + s).join("<br>")}<br>· 多穿<b>${colorChips([f.yiWx],1).replace(/<[^>]+>/g,"")}</b>色系</div></div>`;
+  yiHtml += `<div class="item"><span class="tag ji">忌</span><div>${jiActs.map(s => "· " + s).join("<br>")}</div></div>`;
+  document.getElementById("yiJi").innerHTML = yiHtml;
+
+  // —— 财运 / 桃花 ——
+  let wealthTxt = `<b style="color:${f.wealthScore >= 70 ? "#a9d98b" : "#e89a9a"}">${f.wealthScore}分 ${luckStars(f.wealthScore)}</b><br>`;
+  if (f.isWealthDay) {
+    wealthTxt += `今日为你的「${f.wealthType}」日（日主${a.dmWx}克${f.tWx}）${f.wealthType === "偏财" ? "，偏财透出，或有意外进项" : "，正财当令，适合谈钱收账"}。`;
+  } else {
+    wealthTxt += `今日${f.tWx}${f.god !== "劫财" ? "不直接生财" : "且劫财夺财"}，宜守财不宜大额支出，稳步积累为主。`;
+  }
+  document.getElementById("wealth").innerHTML = wealthTxt;
+
+  let peachTxt = `<b style="color:${f.peachScore >= 70 ? "#e8a0c8" : "#e89a9a"}">${f.peachScore}分 ${luckStars(f.peachScore)}</b><br>`;
+  peachTxt += `你的桃花位在「${a.peach.join("、")}」（${a.gender === "m" ? "日支" : "年支"}查法）。<br>`;
+  if (f.isPeachDay) {
+    peachTxt += `今日恰逢「${DI_ZHI[f.tZhiIdx]}」桃花日，魅力值up，适合约会、表白、社交破冰。`;
+  } else {
+    peachTxt += `今日非桃花日，宜静养魅力、经营自身，单身者可留意${a.peach[0]}方位出现的缘分。`;
+  }
+  document.getElementById("peach").innerHTML = peachTxt;
+
+  // 切换视图
+  document.getElementById("inputCard").style.display = "none";
+  document.getElementById("result").classList.remove("section-hidden");
+  document.getElementById("changeBtn").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showInput(){
+  document.getElementById("inputCard").style.display = "block";
+  document.getElementById("result").classList.add("section-hidden");
+  document.getElementById("changeBtn").style.display = "none";
+}
+</script>
+</body>
+</html>
