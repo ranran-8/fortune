@@ -99,6 +99,31 @@
   .tag.yi { background: rgba(106,168,79,.4); color: #a9d98b; }
   .tag.ji { background: rgba(214,69,65,.35); color: #e89a9a; }
 
+  /* 人生说明书 */
+  .ss-row { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
+  .ss-row .nm { width: 46px; font-size: 13px; color: #d5d9e6; text-align: right; flex-shrink: 0; }
+  .ss-row .bar { flex: 1; height: 10px; background: rgba(0,0,0,.3); border-radius: 5px; overflow: hidden; }
+  .ss-row .bar i { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #8f7ae5, #f5d78e); }
+  .ss-row .ct { width: 42px; font-size: 12px; color: #8a93b2; flex-shrink: 0; }
+  .manual-block {
+    background: rgba(0,0,0,.25); border-radius: 12px; padding: 14px;
+    border: 1px solid rgba(255,255,255,.08); margin-top: 10px;
+  }
+  .manual-block .mt { font-size: 14px; font-weight: 700; color: #f5d78e; letter-spacing: 1px; margin-bottom: 8px; }
+  .manual-block .mc { font-size: 13px; line-height: 1.95; color: #d5d9e6; }
+  .manual-block .mc b { color: #f5d78e; }
+  .manual-tag {
+    display: inline-block; padding: 3px 12px; border-radius: 20px;
+    background: rgba(245,215,142,.15); color: #f5d78e; font-size: 12px;
+    font-weight: 700; margin: 4px 6px 0 0;
+  }
+  .wealth-type-tag {
+    text-align: center; font-size: 15px; font-weight: 700; color: #f5d78e;
+    letter-spacing: 3px; padding: 8px; border-radius: 10px;
+    background: rgba(245,215,142,.1); border: 1px dashed rgba(245,215,142,.4);
+    margin-top: 10px;
+  }
+
   /* 解梦 */
   .dream-item {
     background: rgba(0,0,0,.25); border-radius: 12px; padding: 14px;
@@ -214,6 +239,14 @@
       <div class="pillars" id="pillars"></div>
       <div class="daymaster-tag" id="dmTag"></div>
       <div class="wuxing-bar" id="wxBar"></div>
+    </div>
+
+    <!-- 人生说明书 -->
+    <div class="card">
+      <h2>人生说明书 · 十神格局</h2>
+      <div id="ssBars"></div>
+      <div id="manualBody"></div>
+      <p class="tip" style="margin-top:12px;">· 十神统计采用子平传统「地支藏干加权」模型（本气1.0 / 中气0.6 / 余气0.3），供传统文化学习参考。</p>
     </div>
 
     <!-- 今日干支 + 评分 -->
@@ -520,6 +553,174 @@ function tenGod(tGanIdx, dmGanIdx){
   if (sheng[tWx] === dmWx) return sameYY ? "偏印" : "正印";
   return sameYY ? "七杀" : "正官"; // 克我者
 }
+
+/* ================= 人生说明书 · 十神统计引擎 ================= */
+/* 地支藏干表（子→亥）：[本气, 中气, 余气]，取子平标准藏干，对应天干序号 */
+const ZHI_CANGGAN = [
+  [9],           // 子: 癸
+  [5,9,7],       // 丑: 己癸辛
+  [0,2,4],       // 寅: 甲丙戊
+  [1],           // 卯: 乙
+  [4,1,9],       // 辰: 戊乙癸
+  [2,6,4],       // 巳: 丙庚戊
+  [3,5],         // 午: 丁己
+  [5,3,1],       // 未: 己丁乙
+  [6,8,4],       // 申: 庚壬戊
+  [7],           // 酉: 辛
+  [4,7,3],       // 戌: 戊辛丁
+  [8,0]          // 亥: 壬甲
+];
+const CANGGAN_W = [1.0, 0.6, 0.3]; // 本气 / 中气 / 余气 权重
+
+const SS_GROUP = {
+  "比肩":"比劫","劫财":"比劫","食神":"食伤","伤官":"食伤",
+  "正财":"财星","偏财":"财星","正官":"官杀","七杀":"官杀","正印":"印星","偏印":"印星"
+};
+const SS_MEANING = {
+  "比肩":["同我同性 · 自立自主","主见强、讲义气，善与同辈并肩作战"],
+  "劫财":["同我异性 · 行动果敢","行动力与魄力足，豪爽大方，但易冲动破费"],
+  "食神":["我生同性 · 才华内蕴","懂得生活之美，艺术、口才与福气之缘"],
+  "伤官":["我生异性 · 才华外露","才思敏捷、追求卓越，创造力与锋芒并存"],
+  "正财":["我克异性 · 勤劳之财","务实肯干，靠专业与经营稳定积累财富"],
+  "偏财":["我克同性 · 机遇之财","财路灵活，善抓机遇，长于经营流动之财"],
+  "正官":["克我异性 · 守正担责","自律守规矩、责任感强，适合体系与管理"],
+  "七杀":["克我同性 · 魄力胆识","敢于闯难关、扛硬仗，压力越大成就越大"],
+  "正印":["生我异性 · 学识庇荫","仁慈好学，得长辈贵人，专业学识为立身之本"],
+  "偏印":["生我同性 · 独到洞见","直觉敏锐、思维独特，钻研冷门领域之才"]
+};
+
+function shiShenStats(a){
+  const c = {"比肩":0,"劫财":0,"食神":0,"伤官":0,"正财":0,"偏财":0,"正官":0,"七杀":0,"正印":0,"偏印":0};
+  // 三天干（年、月、时干；日干为日主本身不计）
+  [0,1,3].forEach(p => {
+    c[tenGod(a.ganIdxs[p], a.dmGanIdx)] += 1.0;
+  });
+  // 四地支藏干加权
+  a.zhiIdxs.forEach((z, p) => {
+    ZHI_CANGGAN[z].forEach((gIdx, k) => {
+      c[tenGod(gIdx, a.dmGanIdx)] += CANGGAN_W[k];
+    });
+  });
+  const groups = {"财星":0,"官杀":0,"食伤":0,"印星":0,"比劫":0};
+  for (const k in c) groups[SS_GROUP[k]] += c[k];
+  return { c, groups };
+}
+
+/* 财富类型判定：正财 vs 偏财（含藏干加权） */
+function wealthArchetype(ss){
+  const zc = ss.c["正财"], pc = ss.c["偏财"];
+  const total = ss.groups["财星"];
+  if (total < 0.9) {
+    return { type:"财星隐伏", title:"以技生财 · 修炼型",
+      read:"命局中财星力量微弱。传统命理认为「食伤生财」——才华与技能是财富的源头，把本事修炼到位，财自然随之而来。",
+      paths:["先深耕一项稀缺专业技能，打造个人价值","积累作品与口碑，让名望为你引财","知识付费、技术变现等「轻资产」路线"],
+      avoid:["急于求成、孤注一掷式投入","幻想一夜暴富的捷径"],
+      tip:"你的财富公式 = 技能深度 × 时间。财不在命局，而在你手里打磨的东西。" };
+  }
+  const r = zc / (zc + pc);
+  if (r >= 0.62) {
+    return { type:"正财主导", title:"稳财之命 · 深耕型",
+      read:"正财（劳动经营之财）明显强于偏财。你的财富来自专业、勤奋与口碑，是「一分耕耘一分收获」的稳定型财路。",
+      paths:["专业技术深耕：把自己磨成领域里被信任的人","长期主义职业：薪资稳步增长、职级逐级而上","口碑生意与稳健理财：储蓄、定投、不动产等慢变量"],
+      avoid:["投机短线、追逐热点式投资","为快钱频繁更换赛道","借贷担保、替人扛财"],
+      tip:"你的财富公式 = 专业深度 × 时间。慢就是快，稳就是快。" };
+  }
+  if (r <= 0.38) {
+    return { type:"偏财主导", title:"活财之命 · 机遇型",
+      read:"偏财（流动机遇之财）明显强于正财。你的财路在人与人之间、在信息与机会里，天生商业嗅觉，死守一成不变反而埋没天赋。",
+      paths:["商贸流通、业务开拓：靠市场与人脉捕捉机会","投资理财：让钱流动起来（需先立纪律）","副业多元与资源变现：多点开花、人脉即财脉"],
+      avoid:["把所有钱锁进流动性差的资产","赌博式投机——偏财旺者尤须防「财来财去」","收入无记账、支出无预算"],
+      tip:"你的财富公式 = 机会 × 人脉。先给钱装上「阀门」（预算与止损纪律），再放它奔跑。" };
+  }
+  return { type:"财库双开", title:"双轨之命 · 均衡型",
+    read:"正财与偏财力量相当，兼备「稳」与「活」两种财性。最宜主业保底盘、副业做弹性的双轨模式。",
+    paths:["主业深耕：一份稳定向上、可积累的主业打底","副业/投资：用业余时间经营第二增长曲线","比例纪律：主业收入为主（约七成），副业探索为辅"],
+    avoid:["两头都贪满，精力分散两头空","用主业的稳定给副业的冒险无限兜底"],
+    tip:"你的财富公式 = 稳的地基 + 活的翅膀。先站稳，再起飞。" };
+}
+
+/* 五大格局知识库（取加权总量最高的十神组） */
+const GROUP_MANUAL = {
+  "财星": { title:"务实经营者",
+    nature:"目标感强、执行力高，凡事讲求实际回报，对金钱、资源与机会天然敏感。",
+    gift:"商业嗅觉与经营天赋，擅长把想法变成收益，把资源变成价值。",
+    fields:["商贸经营","金融财务","销售市场","实体产业","项目管理"],
+    blind:"容易过度关注得失而忽略人情与体验。须知财为仆，人为主——经营关系，财富自来。" },
+  "官杀": { title:"担当管理者",
+    nature:"自律、责任感重、抗压能力强，规则意识刻在骨子里，答应的事一定办到。",
+    gift:"组织、领导与决断力，能在混乱中建立秩序，是团队里「能扛事」的人。",
+    fields:["行政管理","工程技术","法律纪律","企业管理","质量安全"],
+    blind:"压力容易内耗，习惯对自己太狠。责任不是枷锁——学会松弛与求助，才能走得长远。" },
+  "食伤": { title:"才华创造者",
+    nature:"感官敏锐、表达欲强、追求独特与自由，天生带几分艺术气质。",
+    gift:"创意、表达与审美天赋，口才与文字出众，能产出让人眼前一亮的东西。",
+    fields:["内容创作","设计艺术","教育培训","表演传媒","技术研发"],
+    blind:"恃才傲物、言语锋利易伤人伤己。才华需要搭档纪律——把锋芒收进作品里，而不是对话里。" },
+  "印星": { title:"学识修养者",
+    nature:"温和好学、重精神世界、直觉细腻，与长辈师长天然有缘。",
+    gift:"学习吸收能力极强，专业深耕与知识沉淀是立身之本，且常有贵人庇荫。",
+    fields:["学术研究","教育文化","医疗健康","心理咨询","写作出版"],
+    blind:"想得多、做得慢，容易停在计划阶段。学问落地方为真知——用输出倒逼输入。" },
+  "比劫": { title:"行动开创者",
+    nature:"独立自主、讲义气、雷厉风行，认定的事说干就干。",
+    gift:"开创执行力与团队号召力，逆境里比谁都顽强。",
+    fields:["创业合伙","销售拓展","体育竞技","自由职业","项目攻坚"],
+    blind:"易与人争利、因朋友破财。义气要有边界——重大钱财事宜，先小人后君子，立字据明算账。" }
+};
+
+function renderManual(a){
+  const ss = shiShenStats(a);
+  const total = Object.values(ss.c).reduce((x, y) => x + y, 0);
+  // 十神条形图（仅显示占比 > 0 的，从高到低）
+  const rows = Object.keys(ss.c).filter(k => ss.c[k] > 0.01)
+    .sort((x, y) => ss.c[y] - ss.c[x]);
+  document.getElementById("ssBars").innerHTML = rows.map(k => {
+    const pct = Math.round(ss.c[k] / total * 100);
+    return `<div class="ss-row"><span class="nm">${k}</span>` +
+      `<div class="bar"><i style="width:${pct}%"></i></div>` +
+      `<span class="ct">${pct}%</span></div>` +
+      `<div style="font-size:11px;color:#8a93b2;margin:-4px 0 2px 54px">${SS_MEANING[k][0]}</div>`;
+  }).join("");
+  // 主格局 + 副格局
+  const gSorted = Object.keys(ss.groups).sort((x, y) => ss.groups[y] - ss.groups[x]);
+  const dom = gSorted[0], sub = gSorted[1];
+  const gm = GROUP_MANUAL[dom];
+  // 财富类型
+  const wa = wealthArchetype(ss);
+  document.getElementById("manualBody").innerHTML = `
+    <div class="manual-block">
+      <div class="mt">性格底色 · 你是「${gm.title}」</div>
+      <div class="mc">${gm.nature}</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">天赋方向</div>
+      <div class="mc">${gm.gift}</div>
+      <div style="margin-top:8px">${gm.fields.map(f => `<span class="manual-tag">${f}</span>`).join("")}</div>
+      <div class="mc" style="margin-top:8px"><b>次格局「${sub}」</b>为你加持：${GROUP_MANUAL[sub].gift.split("，")[0]}，两者相辅相成。</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">注意盲点</div>
+      <div class="mc">${gm.blind}</div>
+    </div>
+    <div class="wealth-type-tag">财富类型 · ${wa.type}</div>
+    <div class="manual-block">
+      <div class="mt">${wa.title}</div>
+      <div class="mc">${wa.read}</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">适合的求财方向</div>
+      <div class="mc">${wa.paths.map(s => "· " + s).join("<br>")}</div>
+    </div>
+    <div class="manual-block">
+      <div class="mt">务必避开</div>
+      <div class="mc" style="color:#e89a9a">${wa.avoid.map(s => "· " + s).join("<br>")}</div>
+    </div>
+    <div class="manual-block" style="border-color:rgba(245,215,142,.35)">
+      <div class="mt">一句话总结</div>
+      <div class="mc"><b>${wa.tip}</b></div>
+    </div>`;
+}
+
 function dailyFortune(a, now){
   const tDIdx = dayGZIndex(now);
   const tGanIdx = tDIdx % 10, tZhiIdx = tDIdx % 12;
@@ -757,6 +958,9 @@ function calc(){
     <div class="wx-seg wx-${WX_ORDER.indexOf(w)}" title="${w} ${a.wxCount[w]}">
       ${w}<br><b>${a.wxCount[w]}</b>
     </div>`).join("");
+
+  // —— 人生说明书（十神格局） ——
+  renderManual(a);
 
   // —— 今日总运 ——
   document.getElementById("todayGZ").textContent =
