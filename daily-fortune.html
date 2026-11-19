@@ -206,6 +206,64 @@
     background: transparent; border: 1px dashed rgba(245,215,142,.4); border-radius: 12px;
     color: #f5d78e; font-size: 13px; letter-spacing: 2px; cursor: pointer;
   }
+
+  /* ===== 付费解锁 ===== */
+  .locked-wrap { position: relative; margin-top: 12px; border-radius: 14px; overflow: hidden; }
+  .locked-blur { filter: blur(7px); pointer-events: none; user-select: none; opacity: .5; }
+  .locked-overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; background: rgba(10,14,30,.4);
+  }
+  .pay-btn {
+    padding: 9px 26px; border: none; border-radius: 22px; cursor: pointer;
+    background: linear-gradient(135deg, #f5d78e, #e0aa4a); color: #3a2c10;
+    font-weight: bold; font-size: 14px; letter-spacing: 1px;
+  }
+  .match-big {
+    text-align: center; margin: 10px 0 6px;
+  }
+  .match-big .n { font-size: 52px; font-weight: bold; color: #f5d78e; line-height: 1; }
+  .match-big .u { font-size: 14px; color: #8a93b2; }
+  .modal-mask {
+    display: none; position: fixed; inset: 0; z-index: 99; padding: 20px;
+    background: rgba(0,0,0,.65); align-items: center; justify-content: center;
+  }
+  .modal-mask.show { display: flex; }
+  .modal-box {
+    background: #161c36; border: 1px solid rgba(245,215,142,.35); border-radius: 16px;
+    max-width: 360px; width: 100%; padding: 22px; color: #dfe4f5;
+  }
+  .modal-box h3 { margin: 0 0 10px; color: #f5d78e; }
+  .modal-box .step { font-size: 13px; line-height: 1.9; color: #c6cde6; }
+  .modal-box input[type=text] {
+    width: 100%; box-sizing: border-box; margin-top: 10px; padding: 10px 12px;
+    background: #0f1428; border: 1px solid rgba(245,215,142,.3); border-radius: 10px;
+    color: #f5d78e; font-size: 15px; letter-spacing: 2px; text-align: center;
+  }
+  .pay-qr {
+    margin: 12px auto 0; padding: 16px; width: 150px; height: 150px;
+    border: 1px dashed rgba(245,215,142,.4); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #8a93b2; text-align: center; background: #0f1428;
+  }
+  .sec-title { color: #f5d78e; font-size: 14px; margin: 14px 0 6px; font-weight: bold; }
+  .sec-body { font-size: 13px; line-height: 1.9; color: #c6cde6; }
+
+  /* ===== 撞钟许愿 ===== */
+  .bell-stage { text-align: center; font-size: 58px; padding: 8px 0 2px; }
+  .bell { display: inline-block; transform-origin: 50% 4%; cursor: pointer; }
+  .bell.swing { animation: bellSwing .7s ease; }
+  @keyframes bellSwing {
+    0% { transform: rotate(0); } 25% { transform: rotate(20deg); }
+    50% { transform: rotate(-15deg); } 75% { transform: rotate(9deg); }
+    100% { transform: rotate(0); }
+  }
+  .coin-badge {
+    display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center;
+    border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe9a8, #d4a017);
+    color: #5a3c00; font-weight: bold; font-size: 13px;
+  }
+  .bell-msg { text-align: center; font-size: 13px; line-height: 1.9; color: #c6cde6; margin-top: 8px; min-height: 20px; }
 </style>
 </head>
 <body>
@@ -250,6 +308,45 @@
     <p class="tip" style="margin:0 0 4px; text-align:center;">心中默想所求之事，再点下方按钮摇签</p>
     <button class="primary" onclick="drawQian()">诚心摇签</button>
     <div class="qian-result" id="qianResult"></div>
+  </div>
+
+  <!-- 八字合婚 -->
+  <div class="card" id="matchCard">
+    <h2>八字合婚 · 两人匹配度</h2>
+    <div class="row2">
+      <div>
+        <label>TA 的出生日期（公历）</label>
+        <input type="date" id="p2Date" min="1900-01-01" max="2030-12-31">
+      </div>
+      <div>
+        <label>TA 的性别</label>
+        <select id="p2Gender"><option value="f">女</option><option value="m">男</option></select>
+      </div>
+    </div>
+    <p class="tip" style="margin:8px 0 0;">· 你的生辰取自上方输入框（未填请先填）。按五行互补、日主生克、地支合冲综合评分。</p>
+    <button class="primary" onclick="calcMatch()" style="margin-top:10px;">测算匹配度</button>
+    <div id="matchResult"></div>
+  </div>
+
+  <!-- 职业规划 -->
+  <div class="card" id="careerCard">
+    <h2>职业规划 · 事业方向</h2>
+    <p class="tip" style="margin:0 0 8px;">根据你的八字喜用神与十神格局，给出适配行业、天赋优势与发展节奏。你的生辰取自上方输入框（未填请先填）。</p>
+    <button class="primary" onclick="calcCareer()">看我的事业报告</button>
+    <div id="careerResult"></div>
+  </div>
+
+  <!-- 许愿池撞钟 -->
+  <div class="card" id="wishCard">
+    <h2>许愿池 · 撞钟祈福</h2>
+    <div class="bell-stage"><span class="bell" id="bell" onclick="strikeBell()">🔔</span></div>
+    <p class="tip" style="margin:0 0 6px; text-align:center;">掷一枚铜币撞击古钟——钟声所至，心愿可达；撞响即返还一枚铜币。</p>
+    <div style="text-align:center; margin-bottom:10px;">
+      <span class="coin-badge">🪙</span> 余币 <b id="coinCnt">6</b> 枚
+    </div>
+    <input type="text" id="wishName" placeholder="为谁许愿？（写昵称或心愿，可不填）" maxlength="16">
+    <button class="primary" onclick="strikeBell()">掷币撞钟</button>
+    <div class="bell-msg" id="bellMsg"></div>
   </div>
 
   <button id="changeBtn" onclick="showInput()">↺ 修改出生信息</button>
@@ -339,6 +436,21 @@
       本页面基于传统八字命理的简化算法生成，仅供文化娱乐参考，不构成任何决策依据。<br>
       © 民俗日历 · 输入数据仅在本机计算，不会上传。
     </footer>
+  </div>
+</div>
+
+<!-- 付款解锁弹窗 -->
+<div class="modal-mask" id="payModal">
+  <div class="modal-box">
+    <h3 id="payTitle">解锁完整报告</h3>
+    <div class="step" id="paySteps"></div>
+    <div class="pay-qr" id="payQr">站长收款码<br>（二维码将显示在此处）</div>
+    <input type="text" id="codeInput" placeholder="输入解锁码" autocomplete="off">
+    <div style="color:#e89a9a; font-size:12px; margin-top:4px;" id="codeErr"></div>
+    <div class="row2" style="margin-top:12px;">
+      <button class="primary" onclick="submitCode()">解锁</button>
+      <button id="changeBtn2" style="padding:10px;" onclick="closePay()">取消</button>
+    </div>
   </div>
 </div>
 
@@ -1522,11 +1634,325 @@ function calc(){
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ================= 付费解锁系统 ================= */
+const UNLOCK_CODES = {
+  match: ["HMFMWF","HMSA94","HM2EF2","HMMPHH","HMAE9S","HMV6WR","HMDBFK","HM7VMQ","HM46JR","HM6AXY","HMPURU","HM3MJA","HMAUNH","HMPYGK","HMZEBR","HM4Y6F","HM327R","HMD3M9","HMSKDB","HMPBX3","HM2EJM","HMGCAE","HMX92Z","HM9F5Z","HMXJ2A"],
+  career: ["ZYQ47H","ZYHP2C","ZYVF7X","ZYRJYX","ZYPU9Z","ZYZ24E","ZYAV9K","ZYQNPD","ZYKXN8","ZYHBD3","ZYM7TR","ZYCCJZ","ZYRFMD","ZYKBJX","ZY93GX","ZYPRXH","ZY23N4","ZY72QN","ZYQFN3","ZYHMB8","ZYMJ4H","ZYBK4J","ZYNY8R","ZY4RN6","ZYJKYJ"],
+  coin1: ["CBZQ3Z","CB28XD","CBXRQX","CBZJKD","CBWQFR","CB9DRG","CB38T9","CB3ST7","CBW3H7","CBRDRC","CBWYV6","CBJKZU","CBEJH5","CBDHKV","CB9V73","CBPXME","CB8SA8","CBBPWS","CB8D4J","CBSU7S","CBH95T","CBJY3P","CBRW76","CBGYX8","CBNR83","CBJ3TZ","CBWZ6A","CBPBDP","CBXPUQ","CB436J","CBZWRP","CBR2KH","CBQ57B","CBWEGQ","CBRD7T","CB329Q","CBSTG3","CBDHEU","CBVXBX","CBMDH5"],
+  coin6: ["C6PXVT","C6DB2T","C6FE8Y","C65MR8","C6WB78","C6TTEG","C6ZMR8","C6CUDN","C66BDE","C6FQKR","C63YV9","C6JQZH","C6GDAJ","C6GKM6","C6TN42"]
+};
+const PAY_INFO = {
+  match: { title:"解锁完整合婚报告 · ¥6.8",
+    steps:"① 微信扫码或转账支付 <b>¥6.8</b> 给站长<br>② 付款后在公众号/微信留言「合婚+付款截图」<br>③ 站长回复解锁码，下方输入即解锁（本设备永久有效）" },
+  career: { title:"解锁完整事业报告 · ¥1.99",
+    steps:"① 微信扫码或转账支付 <b>¥1.99</b> 给站长<br>② 付款后留言「事业码」<br>③ 站长回复解锁码，下方输入即解锁" },
+  coin1: { title:"购买铜币 · ¥1 = 1 枚",
+    steps:"① 支付 <b>¥1</b> 给站长<br>② 留言「铜币」<br>③ 站长回复铜币码，下方输入即到账 1 枚" },
+  coin6: { title:"铜币福袋 · ¥5 = 6 枚（更划算）",
+    steps:"① 支付 <b>¥5</b> 给站长<br>② 留言「福袋」<br>③ 站长回复福袋码，下方输入即到账 6 枚" }
+};
+let payType = null;
+function isUnlocked(k){ try { return localStorage.getItem("dfu_"+k) === "1"; } catch(e){ return false; } }
+function setUnlocked(k){ try { localStorage.setItem("dfu_"+k, "1"); } catch(e){} }
+function openPay(type){
+  payType = type;
+  const info = PAY_INFO[type];
+  document.getElementById("payTitle").innerHTML = info.title;
+  document.getElementById("paySteps").innerHTML = info.steps;
+  document.getElementById("codeInput").value = "";
+  document.getElementById("codeErr").textContent = "";
+  document.getElementById("payModal").classList.add("show");
+}
+function closePay(){ document.getElementById("payModal").classList.remove("show"); }
+function submitCode(){
+  const v = document.getElementById("codeInput").value.trim().toUpperCase();
+  const pool = UNLOCK_CODES[payType] || [];
+  if (!v || !pool.includes(v)) {
+    document.getElementById("codeErr").textContent = "解锁码无效，请核对后重试";
+    return;
+  }
+  UNLOCK_CODES[payType] = pool.filter(c => c !== v);
+  if (payType === "coin1") { addCoins(1); showBellBought(1); }
+  else if (payType === "coin6") { addCoins(6); showBellBought(6); }
+  else { setUnlocked(payType); }
+  closePay();
+  if (payType === "match" && lastMatch) renderMatch();
+  if (payType === "career" && lastCareer) renderCareer();
+}
+
+/* ================= 八字合婚 ================= */
+const WX_SHENG = {"木":"火","火":"土","土":"金","金":"水","水":"木"};
+const WX_KE    = {"木":"土","火":"金","土":"水","金":"木","水":"火"};
+const WX_PERSONA = {
+  "木":"主思考与规划，像树一样向上生长，认定的事有韧劲",
+  "火":"热情直率行动派，情绪来得快去得快，感染力强",
+  "土":"包容踏实重承诺，是关系里的定海神针",
+  "金":"果断清晰讲原则，话不多但句句到位",
+  "水":"灵活智慧善沟通，是天生的调和剂"
+};
+const WX_CAREER = {
+  "木":["教育培训","文创写作","医药健康","园林环保","家具设计"],
+  "火":["新媒体运营","互联网/电商","餐饮美食","传媒演艺","能源电力"],
+  "土":["房产建筑","管理行政","农业民生","保险信托","手工艺实业"],
+  "金":["金融投资","机械制造","司法法务","精密技术","汽车五金"],
+  "水":["物流贸易","旅游出行","咨询策划","跨境商务","水产航运"]
+};
+const GROUP_TRAIT = {
+  "财星":"务实肯干，对机会和数字敏感，适合直接创造业绩的岗位",
+  "官杀":"有责任心与抗压性，规则感强，适合管理与制度型环境",
+  "食伤":"创意与表达力突出，思维活跃，适合输出内容与才艺的领域",
+  "印星":"学习力强、心思细腻，适合知识密集与幕后支持型工作",
+  "比劫":"行动力强、独立自主，适合合伙创业与自由度高的工作"
+};
+const GROUP_WEAK = {
+  "财星":"对钱和机会的敏感度一般，建议把财务交给工具和流程（记账、预算），专注把事做好，财随名来",
+  "官杀":"天性不爱被管束，高压制度环境容易内耗，选工作优先看弹性与成长空间",
+  "食伤":"表达输出偏内敛，「把自己的想法讲出来」是必修课，练成回报极大",
+  "印星":"靠自己摸索型选手，多拜师、多读书、多蹭前辈经验，能少走三年弯路",
+  "比劫":"单打独斗容易累，学会借力合作，把 70 分的搭档用成 100 分的杠杆"
+};
+const LIUHE_LIST = ["子丑","寅亥","卯戌","辰酉","巳申","午未"];
+const CHONG_LIST = ["子午","丑未","寅申","卯酉","辰戌","巳亥"];
+const SANHE_LIST = [["申","子","辰"],["巳","酉","丑"],["寅","午","戌"],["亥","卯","未"]];
+function zhiPair(z1, z2){
+  const s1 = z1 + z2, s2 = z2 + z1;
+  if (LIUHE_LIST.includes(s1) || LIUHE_LIST.includes(s2)) return "六合";
+  if (CHONG_LIST.includes(s1) || CHONG_LIST.includes(s2)) return "六冲";
+  if (SANHE_LIST.some(g => g.includes(z1) && g.includes(z2))) return "三合";
+  return null;
+}
+function domWxOf(a){
+  return WX_ORDER.reduce((best, w) => a.wxCount[w] > a.wxCount[best] ? w : best, "木");
+}
+
+let lastMatch = null;
+function calcMatch(){
+  const ownDate = document.getElementById("birthDate").value;
+  if (!ownDate) { alert("请先在上方输入你自己的出生日期"); return; }
+  const p2Date = document.getElementById("p2Date").value;
+  if (!p2Date) { alert("请输入 TA 的出生日期"); return; }
+  const ownHour = parseInt(hourSel.value, 10) || 12;
+  const a1 = analyze(ownDate, ownHour, document.getElementById("gender").value);
+  const a2 = analyze(p2Date, 12, document.getElementById("p2Gender").value);
+  lastMatch = { a1, a2 };
+  renderMatch();
+  document.getElementById("matchResult").scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+function matchScoreData(m){
+  const { a1, a2 } = m;
+  const A = a1.dmWx, B = a2.dmWx;
+  let rel;
+  if (A === B) rel = { s:78, t:"同气相求", d:`两人同属${A}命，磁场同频、节奏一致，是「不用解释就懂你」型组合。` };
+  else if (WX_SHENG[A] === B) rel = { s:86, t:"你生TA", d:`你的${A}滋养TA的${B}，相处中你付出多、TA受益多，关系温润绵长。` };
+  else if (WX_SHENG[B] === A) rel = { s:88, t:"TA生你", d:`TA的${B}滋养你的${A}，TA是你命里的「养分型」伴侣，得TA助力明显。` };
+  else if (WX_KE[A] === B) rel = { s:73, t:"你主外TA主内", d:`你的${A}管得住TA的${B}，你偏主导、TA偏配合，注意别把关心变成管控。` };
+  else rel = { s:71, t:"TA推着你走", d:`TA的${B}约束你的${A}，TA偏主导，你会被TA推着成长，偶尔有被管的感觉但也算幸福。` };
+  const yy = a1.dmYy !== a2.dmYy ? 6 : -3;
+  let comp = 0; const compNotes = [];
+  WX_ORDER.forEach(w => {
+    if (a1.wxCount[w] === 0 && a2.wxCount[w] >= 2) { comp += 5; compNotes.push(`你缺${w}、TA的${w}旺——TA正好补上你命里的空位，你的短板是TA的长板`); }
+    else if (a2.wxCount[w] === 0 && a1.wxCount[w] >= 2) { comp += 5; compNotes.push(`TA缺${w}、你的${w}旺——你是TA的及时雨，TA依赖你的正是你最富余的`); }
+  });
+  comp = Math.min(comp, 15);
+  let xiB = 0; const xiNotes = [];
+  const dom1 = domWxOf(a1), dom2 = domWxOf(a2);
+  if (a1.xiWxSet.includes(dom2)) { xiB += 8; xiNotes.push(`TA的旺五行为「${dom2}」，恰是你的喜用神——TA自带旺你的气场`); }
+  if (a2.xiWxSet.includes(dom1)) { xiB += 8; xiNotes.push(`你的旺五行为「${dom1}」，恰是TA的喜用神——你也在悄悄旺TA`); }
+  xiB = Math.min(xiB, 16);
+  let brB = 0; const brNotes = [];
+  [[a1.zhiIdxs[2], a2.zhiIdxs[2], "日支"], [a1.zhiIdxs[0], a2.zhiIdxs[0], "年支"]].forEach(([x, y, lab]) => {
+    const pz = zhiPair(DI_ZHI[x], DI_ZHI[y]);
+    if (pz === "六合") { brB += 6; brNotes.push(`${lab}「${DI_ZHI[x]}${DI_ZHI[y]}」六合——暗合投缘，越处越有默契`); }
+    else if (pz === "三合") { brB += 4; brNotes.push(`${lab}「${DI_ZHI[x]}${DI_ZHI[y]}」三合——目标一致，是能一起干事的组合`); }
+    else if (pz === "六冲") { brB -= 4; brNotes.push(`${lab}「${DI_ZHI[x]}${DI_ZHI[y]}」相冲——作息或消费观易有落差，拌嘴快和好也要快，吵完别过夜`); }
+  });
+  const score = Math.max(62, Math.min(96, Math.round(rel.s + yy + comp + xiB + brB)));
+  return { rel, compNotes, xiNotes, brNotes, score };
+}
+function matchVerdict(s){
+  if (s >= 90) return "天作之合 · 上上缘";
+  if (s >= 82) return "天生一对 · 上缘";
+  if (s >= 74) return "融洽有爱 · 中上缘";
+  return "互补成长 · 缘在经营";
+}
+function renderMatch(){
+  const m = lastMatch, box = document.getElementById("matchResult");
+  if (!m) return;
+  const d = matchScoreData(m);
+  const stars = "★".repeat(Math.round(d.score / 20)) + "☆".repeat(5 - Math.round(d.score / 20));
+  const unlocked = isUnlocked("match");
+  const free = `
+    <div class="match-big">
+      <div class="n">${d.score}<span class="u"> /100</span></div>
+      <div style="color:#f5d78e; margin:4px 0;">${matchVerdict(d.score)} ${stars}</div>
+      <div style="font-size:12px; color:#8a93b2;">${m.a1.pillars[2].gan}${m.a1.pillars[2].zhi} × ${m.a2.pillars[2].gan}${m.a2.pillars[2].zhi} · ${d.rel.t}</div>
+      <div style="font-size:13px; line-height:1.9; color:#c6cde6; margin-top:8px;">${d.rel.d}</div>
+    </div>`;
+  const detail = `
+    <div style="padding:4px 2px;">
+      <div class="sec-title">一 · 五行互补详解</div>
+      <div class="sec-body">${d.compNotes.length ? d.compNotes.map(s => "· " + s).join("<br>") : "两人五行分布齐整，谁也不缺谁顶——属于「各自完整、彼此锦上添花」的组合，稳定度高。"}</div>
+      <div class="sec-title">二 · 性格相处模式</div>
+      <div class="sec-body">
+        · 你：${WX_PERSONA[m.a1.dmWx]}<br>
+        · TA：${WX_PERSONA[m.a2.dmWx]}<br>
+        · 组合解读：${d.rel.t === "同气相求" ? "两人性格底色相近，容易同频共振，也容易同时上头或同时躺平——一人保持清醒即可。" : "一动一静、一强一柔之间刚好形成互补，日常分工按各自擅长来，效率翻倍。"}
+      </div>
+      <div class="sec-title">三 · 磨合点提醒</div>
+      <div class="sec-body">${(d.brNotes.length ? d.brNotes : ["两人地支无冲无刑，相处底盘平稳"]).map(s => "· " + s).join("<br>")}${d.rel.t === "你主外TA主内" ? "<br>· 你主导惯了，多问一句「你觉得呢」，TA会更愿意表达" : d.rel.t === "TA推着你走" ? "<br>· TA意见强势时别硬顶，先认可再补充，沟通效率高得多" : ""}</div>
+      <div class="sec-title">四 · 旺感情锦囊</div>
+      <div class="sec-body">
+        · 幸运同框色：${colorChips([...new Set([...m.a1.xiWxSet, ...m.a2.xiWxSet])].slice(0,2))}<br>
+        · 约会吉方：${WX_DIR[m.a1.xiWxSet[0]]}与${WX_DIR[m.a2.xiWxSet[0]]}之间——取中间方位最旺两人<br>
+        ${d.xiNotes.length ? "· " + d.xiNotes.join("<br>· ") : ""}
+      </div>
+      <p class="tip" style="margin-top:10px;">合婚结果基于五行生克简化模型，缘分靠经营——报告仅供参考，幸福掌握在你们自己手里。</p>
+    </div>`;
+  if (unlocked) {
+    box.innerHTML = free + detail;
+  } else {
+    box.innerHTML = free + `
+      <div class="locked-wrap">
+        <div class="locked-blur">${detail}</div>
+        <div class="locked-overlay">
+          <div style="font-size:13px; color:#f5d78e;">完整报告：五行互补 · 相处模式 · 磨合点 · 旺感情锦囊</div>
+          <button class="pay-btn" onclick="openPay('match')">¥6.8 解锁完整报告</button>
+        </div>
+      </div>`;
+  }
+}
+
+/* ================= 职业规划 ================= */
+let lastCareer = null;
+function calcCareer(){
+  const dateStr = document.getElementById("birthDate").value;
+  if (!dateStr) { alert("请先在上方输入你的出生日期"); return; }
+  const hour = parseInt(hourSel.value, 10) || 12;
+  const a = analyze(dateStr, hour, document.getElementById("gender").value);
+  const ss = shiShenStats(a);
+  lastCareer = { a, ss };
+  renderCareer();
+  document.getElementById("careerResult").scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+function renderCareer(){
+  const { a, ss } = lastCareer, box = document.getElementById("careerResult");
+  const gSorted = Object.keys(ss.groups).sort((x, y) => ss.groups[y] - ss.groups[x]);
+  const dom = gSorted[0], weak = gSorted[gSorted.length - 1];
+  const jobPool = [];
+  a.xiWxSet.forEach(wx => jobPool.push(...WX_CAREER[wx]));
+  const gJobs = { "财星":["销售商务","经营创业"], "官杀":["管理岗","体制内"], "食伤":["内容创作","设计策划"], "印星":["研究教育","专业顾问"], "比劫":["自主创业","自由职业"] };
+  jobPool.push(...gJobs[dom]);
+  const top3 = [...new Set(jobPool)].slice(0, 3);
+  const unlocked = isUnlocked("career");
+  const free = `
+    <div style="margin-top:10px;">
+      <div style="font-size:13px; line-height:1.9; color:#c6cde6;">
+        你的主导格局为<b style="color:#f5d78e">「${dom}」</b>——${GROUP_TRAIT[dom]}。<br>
+        当下最值得押注的三个方向：<b style="color:#f5d78e">${top3.join(" / ")}</b>
+      </div>
+    </div>`;
+  const detail = `
+    <div style="padding:4px 2px;">
+      <div class="sec-title">一 · 天赋优势</div>
+      <div class="sec-body">${gSorted.slice(0, 2).map(g => `· <b>${g}旺</b>：${GROUP_TRAIT[g]}`).join("<br>")}<br>· 日主${a.dmWx}身${a.strong ? "旺" : "弱"}，${a.strong ? "承载力强，适合扛大项目、带团队，越有挑战越出成绩" : "敏锐细腻，适合深耕专业，先做深再做广"}</div>
+      <div class="sec-title">二 · 潜在短板</div>
+      <div class="sec-body">${weak !== dom ? `「${weak}」偏弱：${GROUP_WEAK[weak]}` : `格局均衡无明显短板，注意别贪多—— ${GROUP_WEAK[dom]}`}</div>
+      <div class="sec-title">三 · 五行行业全表（喜用已标金）</div>
+      <div class="sec-body">${WX_ORDER.map(w => {
+        const tag = a.xiWxSet.includes(w) ? ' <b style="color:#f5d78e">★喜用</b>' : "";
+        return `· <b>${w}</b>${tag}：${WX_CAREER[w].join("、")}`;
+      }).join("<br>")}</div>
+      <div class="sec-title">四 · 发展节奏建议</div>
+      <div class="sec-body">${a.strong
+        ? "· 身旺能扛事：3 年内主动争取带项目的机会，你的上限由舞台大小决定<br>· 跳槽/创业窗口优先选喜用五行当旺的年份，贵人多、阻力小"
+        : "· 身弱宜借力：先跟对平台和团队，把技能打磨到前 20%，再谈独立<br>· 不必急于创业，35 岁前后厚积薄发是更适合你的剧本"}</div>
+      <div class="sec-title">五 · 开运锦囊</div>
+      <div class="sec-body">
+        · 利你事业的方位：<b style="color:#f5d78e">${WX_DIR[a.xiWxSet[0]]}</b>（面试、谈客户可优先约这个方向）<br>
+        · 面试/谈单幸运色：${colorChips(a.xiWxSet.slice(0,1))}
+      </div>
+      <p class="tip" style="margin-top:10px;">职业建议基于喜用神与十神格局简化模型——方向指路，努力铺路，仅供参考。</p>
+    </div>`;
+  if (unlocked) {
+    box.innerHTML = free + detail;
+  } else {
+    box.innerHTML = free + `
+      <div class="locked-wrap">
+        <div class="locked-blur">${detail}</div>
+        <div class="locked-overlay">
+          <div style="font-size:13px; color:#f5d78e;">完整报告：天赋优势 · 短板 · 行业全表 · 发展节奏 · 开运锦囊</div>
+          <button class="pay-btn" onclick="openPay('career')">¥1.99 解锁完整报告</button>
+        </div>
+      </div>`;
+  }
+}
+
+/* ================= 许愿池撞钟 ================= */
+const BELL_BLESS = [
+  "钟鸣三响，贵人在路上 🐉","此钟一响，好运进账 💰","钟声清越，所愿皆真 ✨",
+  "钟声传得远，心愿有人听 🌙","一声钟响，霉运退散 🍀","钟响福到，好事将近 🎋",
+  "古钟应愿，缘分将至 💕","钟声荡开，灵感涌来 💡","福钟报喜，家人安康 🏮","钟鸣吉祥，步步高升 ⛰️"
+];
+const BELL_MISS = [
+  "钟没响，但铜币落进了许愿池——诚意已收到，再试一次",
+  "差一点点！池里的鲤鱼替你记下了这个愿望 🐟",
+  "铜币沉底，愿望入册——池水记性好，不会忘的",
+  "这次钟哥没睡醒，再掷一枚试试 🔔",
+  "钟声未起，福气在酝酿——好事多磨"
+];
+function getCoins(){
+  try {
+    const v = parseInt(localStorage.getItem("dfw_coins") || "6", 10);
+    return isNaN(v) || v < 0 ? 6 : v;
+  } catch(e){ return 6; }
+}
+function setCoins(n){
+  try { localStorage.setItem("dfw_coins", String(n)); } catch(e){}
+  document.getElementById("coinCnt").textContent = n;
+}
+function addCoins(n){ setCoins(getCoins() + n); }
+function showBellBought(n){
+  document.getElementById("bellMsg").innerHTML = `🪙 到账 ${n} 枚铜币——池水已备好，继续撞钟吧！`;
+}
+function showCoinShop(){
+  document.getElementById("bellMsg").innerHTML =
+    `铜币用完啦～许愿池不关门：<br>
+     <button class="pay-btn" style="margin:6px 4px 0;" onclick="openPay('coin1')">¥1 兑 1 枚</button>
+     <button class="pay-btn" style="margin:6px 4px 0;" onclick="openPay('coin6')">¥5 兑 6 枚（划算）</button>`;
+}
+let bellBusy = false;
+function strikeBell(){
+  if (bellBusy) return;
+  const bell = document.getElementById("bell"), msg = document.getElementById("bellMsg");
+  const coins = getCoins();
+  if (coins <= 0) { showCoinShop(); return; }
+  bellBusy = true;
+  setCoins(coins - 1);
+  const name = document.getElementById("wishName").value.trim();
+  bell.classList.add("swing");
+  msg.textContent = "铜币在空中划出一道弧线……";
+  setTimeout(() => {
+    bell.classList.remove("swing");
+    bellBusy = false;
+    if (Math.random() < 0.36) {
+      addCoins(1);
+      const bless = BELL_BLESS[Math.floor(Math.random() * BELL_BLESS.length)];
+      msg.innerHTML = `<b style="color:#f5d78e">铛——！钟响了！</b><br>${bless}${name ? `<br>「${name}」的心愿已被古钟记下` : ""}<br><span style="color:#8a93b2; font-size:12px;">撞响返币 · 余币已返还 1 枚</span>`;
+    } else {
+      msg.innerHTML = BELL_MISS[Math.floor(Math.random() * BELL_MISS.length)] + (name ? `<br>「${name}」的愿望池子收好了` : "") + `<br><span style="color:#8a93b2; font-size:12px;">余币 ${getCoins()} 枚</span>`;
+    }
+  }, 720);
+}
+
 function showInput(){
   document.getElementById("inputCard").style.display = "block";
   document.getElementById("result").classList.add("section-hidden");
   document.getElementById("changeBtn").style.display = "none";
 }
+
+/* ================= 初始化 ================= */
+document.getElementById("coinCnt").textContent = getCoins();
+if (getCoins() <= 0) showCoinShop();
 </script>
 <!-- 51.la 站点统计 -->
 <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
