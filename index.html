@@ -2104,12 +2104,14 @@ document.getElementById("coinCnt").textContent = getCoins();
 if (getCoins() <= 0) showCoinShop();
 showRings();
 initThrowButton();
-/* 仅本机测试环境生效的调试放币：http://127.0.0.1...?tcoins=99（线上域名无效） */
+/* 调试放币：本机 http://127.0.0.1...?tcoins=99 直接生效；线上需暗号 ?tcoins=100&k=dafu88 */
 try {
+  const _p = new URLSearchParams(location.search);
   const _h = location.hostname;
-  if (_h === "127.0.0.1" || _h === "localhost") {
-    const _tc = parseInt(new URLSearchParams(location.search).get("tcoins"), 10);
-    if (_tc > 0) { setCoins(_tc); document.getElementById("coinCnt").textContent = getCoins(); }
+  const _tc = parseInt(_p.get("tcoins"), 10);
+  const _k = _p.get("k") || "";
+  if (_tc > 0 && (_h === "127.0.0.1" || _h === "localhost" || _k === "dafu88")) {
+    setCoins(_tc); document.getElementById("coinCnt").textContent = getCoins();
   }
 } catch(e){}
 /* 调试/分享直达：?pay=match|career|coin1|coin6 自动打开付款弹窗 */
